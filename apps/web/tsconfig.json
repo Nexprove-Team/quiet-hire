@@ -1,7 +1,6 @@
 {
   "extends": "@quiethire/typescript-config/nextjs.json",
   "compilerOptions": {
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./*"],
       "@quiethire/ui/*": ["../../packages/ui/src/*"]
