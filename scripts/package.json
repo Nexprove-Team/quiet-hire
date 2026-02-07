@@ -1,0 +1,33 @@
+{
+  "name": "@quiethire/scripts",
+  "version": "0.0.1",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "scrape": "tsx src/index.ts",
+    "scrape:linkedin": "tsx src/index.ts --platform linkedin",
+    "scrape:twitter": "tsx src/index.ts --platform twitter",
+    "scrape:careers": "tsx src/index.ts --platform company-page",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/ --max-warnings 0"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "dotenv": "^17.2.4",
+    "drizzle-orm": "^0.45.1",
+    "playwright": "^1.58.2",
+    "postgres": "^3.4.8",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@quiethire/typescript-config": "workspace:*",
+    "@types/node": "^25.2.1",
+    "drizzle-kit": "^0.31.8",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
