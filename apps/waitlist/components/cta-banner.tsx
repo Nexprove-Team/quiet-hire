@@ -17,9 +17,9 @@ export function CTABanner() {
         >
           {/* Decorative gradient orbs - animated */}
           <div className="absolute inset-0 overflow-hidden">
-             <div className="absolute -left-[20%] top-[-20%] h-[500px] w-[500px] animate-pulse-slow rounded-full bg-primary/20 blur-[120px]" />
-             <div className="absolute -bottom-[20%] -right-[20%] h-[500px] w-[500px] animate-pulse-slow rounded-full bg-blue-500/20 blur-[120px] delay-700" />
-             <div className="absolute left-[20%] top-[40%] h-[200px] w-[200px] animate-float rounded-full bg-white/5 blur-[50px]" />
+            <div className="absolute -left-[20%] top-[-20%] h-[500px] w-[500px] animate-pulse-slow rounded-full bg-primary/20 blur-[120px]" />
+            <div className="absolute -bottom-[20%] -right-[20%] h-[500px] w-[500px] animate-pulse-slow rounded-full bg-blue-500/20 blur-[120px] delay-700" />
+            <div className="absolute left-[20%] top-[40%] h-[200px] w-[200px] animate-float rounded-full bg-white/5 blur-[50px]" />
           </div>
 
           <div className="relative z-10 flex flex-col items-center">
@@ -27,17 +27,19 @@ export function CTABanner() {
               <Sparkles className="mr-2 size-3.5" />
               <span>Limited Early Access</span>
             </div>
-            
+
             <h2 className="mx-auto max-w-2xl text-4xl font-medium tracking-tight md:text-5xl lg:text-6xl">
               Ready to transform <br className="hidden md:block" />
-              <span className="font-display italic text-primary-foreground">your hiring process?</span>
+              <span className="font-display italic text-primary-foreground">
+                your hiring process?
+              </span>
             </h2>
-            
+
             <p className="mx-auto mt-6 max-w-xl text-lg text-white/60 md:text-xl">
               Join hundreds of forward-thinking companies already on the
               waitlist. Be the first to experience recruitment done right.
             </p>
-            
+
             <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Button
                 size="lg"
@@ -50,7 +52,7 @@ export function CTABanner() {
                 </a>
               </Button>
             </div>
-            
+
             <p className="mt-6 text-sm text-white/40">
               No credit card required · Cancel anytime
             </p>
