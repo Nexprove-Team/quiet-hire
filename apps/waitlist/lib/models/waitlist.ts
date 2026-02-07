@@ -8,7 +8,6 @@ interface IWaitlist extends Document {
     updatedAt: Date
 }
 
-
 const waitlistSchema = new Schema<IWaitlist>(
     {
         fullName: { type: String, required: true },
