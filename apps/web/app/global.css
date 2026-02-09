@@ -1,0 +1,99 @@
+@import 'tailwindcss';
+@import '@hackhyre/ui/globals.css';
+
+/* ── Auth page animations ──────────────────────────────────────────── */
+@keyframes auth-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes auth-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes step-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+@keyframes checkmark-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* ── Auth background pattern ───────────────────────────────────────── */
+.auth-bg-pattern {
+  background-image: radial-gradient(
+      circle at 20% 50%,
+      oklch(0.82 0.22 155 / 0.08) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      oklch(0.82 0.22 155 / 0.05) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 60% 80%,
+      oklch(0.195 0.025 275 / 0.3) 0%,
+      transparent 50%
+    );
+}
+
+.dark .auth-bg-pattern {
+  background-image: radial-gradient(
+      circle at 20% 50%,
+      oklch(0.82 0.22 155 / 0.12) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 20%,
+      oklch(0.82 0.22 155 / 0.06) 0%,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at 60% 80%,
+      oklch(0.145 0.005 285 / 0.5) 0%,
+      transparent 50%
+    );
+}
+
+/* ── Auth grid dots pattern for branding panel ─────────────────────── */
+.auth-grid-dots {
+  background-image: radial-gradient(
+    circle,
+    oklch(0.82 0.22 155 / 0.15) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+/* ── Utility animations ────────────────────────────────────────────── */
+.animate-auth-fade-in {
+  animation: auth-fade-in 0.4s ease-out;
+}
+
+.animate-auth-slide-in {
+  animation: auth-slide-in 0.4s ease-out;
+}

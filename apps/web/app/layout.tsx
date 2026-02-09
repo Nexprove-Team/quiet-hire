@@ -1,4 +1,4 @@
-import '@hackhyre/ui/globals.css'
+import './global.css'
 import { Providers } from '@/components/providers'
 import { Bricolage_Grotesque, DM_Sans } from 'next/font/google'
 import { cn } from '@hackhyre/ui/lib/utils'
@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          'font-mono antialiased',
+          'font-sans antialiased',
           fontSans.variable,
           fontBricolage.variable
         )}

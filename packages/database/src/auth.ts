@@ -1,8 +1,8 @@
+import { db } from "./client";
+import * as schema from "./schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { username } from "better-auth/plugins/username";
-import { db } from "./client";
-import * as schema from "./schema/index";
+import { multiSession, username } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -12,7 +12,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [username()],
+  plugins: [username(), multiSession()],
   user: {
     additionalFields: {
       role: {
@@ -38,6 +38,12 @@ export const auth = betterAuth({
       },
     },
   },
+  advanced: {
+    cookiePrefix: "hyre",
+    database: {
+      generateId: () => crypto.randomUUID(),
+    },
+  }
 });
 
 export type Session = typeof auth.$Infer.Session;

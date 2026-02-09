@@ -1,3 +1,3 @@
 export { db } from "./client";
 export { env } from "../env";
-export * from "./schema/index";
+export * from "./schema";
