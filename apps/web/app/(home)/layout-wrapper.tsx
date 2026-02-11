@@ -10,7 +10,7 @@ const LayoutWrapper = ({ children }: { children: React.ReactNode }) => {
     <div
       className={cn(
         'min-h-svh transition-colors duration-300 ease-in-out',
-        path === '/jobs-listing' ? 'bg-white' : 'bg-background'
+        path.includes('/jobs-listing') ? 'bg-white' : 'bg-background'
       )}
     >
       {children}

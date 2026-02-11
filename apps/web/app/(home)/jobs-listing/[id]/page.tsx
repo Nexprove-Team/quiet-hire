@@ -35,6 +35,8 @@ import type { Job } from '../(components)/mock-data'
 import { useSavedJobs } from '../(components)/use-saved-jobs'
 import { useCompanySheet } from '../(components)/use-company-sheet'
 import { CompanySheet } from '../(components)/company-sheet'
+import { useApplySheet } from '../(components)/use-apply-sheet'
+import { ApplySheet } from '../(components)/apply-sheet'
 
 // ── Force light mode via CSS variable overrides ───────────────────────
 
@@ -301,6 +303,7 @@ export default function JobDetailPage({
   const toggleSave = useSavedJobs((s) => s.toggle)
   const saved = useSavedJobs((s) => s.saved)
   const openCompanySheet = useCompanySheet((s) => s.open)
+  const openApplySheet = useApplySheet((s) => s.open)
 
   if (!job) {
     notFound()
@@ -357,6 +360,7 @@ export default function JobDetailPage({
               <Button
                 size="sm"
                 className="gap-2 rounded-lg bg-primary text-[13px] font-semibold text-neutral-900 hover:bg-primary/90"
+                onClick={() => openApplySheet(job.id, job.title, job.company)}
               >
                 <Send size={14} variant="Linear" />
                 Apply Now
@@ -662,7 +666,10 @@ export default function JobDetailPage({
                       Apply now and take the next step in your career.
                       We&apos;ll review your application and get back to you.
                     </p>
-                    <Button className="w-full gap-2 rounded-lg bg-primary font-semibold text-neutral-900 hover:bg-primary/90">
+                    <Button
+                      className="w-full gap-2 rounded-lg bg-primary font-semibold text-neutral-900 hover:bg-primary/90"
+                      onClick={() => openApplySheet(job.id, job.title, job.company)}
+                    >
                       <Send size={16} variant="Linear" />
                       Apply Now
                     </Button>
@@ -696,8 +703,9 @@ export default function JobDetailPage({
         </div>
       </div>
 
-      {/* Company Profile Sheet */}
+      {/* Sheets */}
       <CompanySheet />
+      <ApplySheet />
     </div>
   )
 }

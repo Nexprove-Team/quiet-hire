@@ -30,6 +30,7 @@ import {
   ArrowRight,
   HambergerMenu,
   Icon,
+  Logo as LogoIcon,
 } from '@hackhyre/ui/icons'
 
 interface HeaderUser {
@@ -55,7 +56,7 @@ function Logo({ isJobListing }: { isJobListing?: boolean }) {
   return (
     <Link href="/" className="flex items-center gap-2.5">
       <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-xl shadow-sm">
-        <span className="text-sm font-extrabold text-white">H</span>
+        <LogoIcon />
       </div>
       <p
         className={cn(
@@ -73,10 +74,12 @@ function NavLink({
   href,
   label,
   isActive,
+  isJoblisting,
 }: {
   href: string
   label: string
   isActive: boolean
+  isJoblisting?: boolean
 }) {
   return (
     <Link
@@ -86,7 +89,10 @@ function NavLink({
         isActive
           ? 'text-foreground'
           : 'text-muted-foreground hover:text-foreground',
-        isActive && href === '/jobs-listing' ? 'text-white' : ''
+        isActive && href.includes('/jobs-listing') && isJoblisting
+          ? 'text-white'
+          : '',
+        isJoblisting && !isActive ? 'text-white/80 hover:text-white' : ''
       )}
     >
       {label}
@@ -233,7 +239,7 @@ export function Header({ user }: HeaderProps) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  const isJobListingPage = pathname === '/jobs-listing'
+  const isJobListingPage = pathname.includes('/jobs-listing')
 
   return (
     <header
@@ -254,6 +260,7 @@ export function Header({ user }: HeaderProps) {
               href={item.href}
               label={item.label}
               isActive={pathname.startsWith(item.href)}
+              isJoblisting={isJobListingPage}
             />
           ))}
         </nav>

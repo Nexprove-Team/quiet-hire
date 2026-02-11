@@ -6,6 +6,8 @@
 */
 export type { IconProps, Icon } from 'iconsax-reactjs'
 
+export { Logo } from './logo'
+
 
 export {
   // Navigation
