@@ -1,52 +1,56 @@
 name: Deploy Web App to Production
 
 on:
-    push:
-        branches:
-            - main
-        paths:
-            - "apps/waitlist/**"
-            - "packages/**"
+  push:
+    branches:
+      - main
+    paths:
+      - "apps/waitlist/**"
+      - "packages/**"
 
 permissions:
-    id-token: write
-    contents: read
+  id-token: write
+  contents: read
 
 jobs:
-    deploy:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout Code
-              uses: actions/checkout@v5
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v5
 
-            - name: setup pnpm
-              uses: pnpm/action-setup@v4
+      - name: setup pnpm
+        uses: pnpm/action-setup@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v5
-              with:
-                  node-version: latest
-                  cache: "pnpm"
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: latest
+          cache: "pnpm"
 
-            - name: Install dependencies
-              run: pnpm install
+      - name: Install dependencies
+        run: pnpm install
 
-            - name: Build
-              run: pnpm build
+      - name: Build
+        run: |
+          cat >> .env <<EOF
+          DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          EOF
+          pnpm build
 
-            - name: Install Vercel CLI
-              run: npm install -g vercel
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-            - name: Make trivial bot commit (so last committer is GitHub Actions bot)
-              run: |
-                  git config user.name "github-actions[bot]"
-                  git config user.email "actions@github.com"
-                  git commit --allow-empty -m "chore(ci): trivial bot commit to satisfy Vercel" \
-                    --author="github-actions[bot] <actions@github.com>"
-                  git --no-pager log -1 --pretty=fuller
+      - name: Make trivial bot commit (so last committer is GitHub Actions bot)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git commit --allow-empty -m "chore(ci): trivial bot commit to satisfy Vercel" \
+            --author="github-actions[bot] <actions@github.com>"
+          git --no-pager log -1 --pretty=fuller
 
-            - name: Deploy to Vercel
-              run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
-              env:
-                  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-                  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_APP_PROJECT_ID }}
+      - name: Deploy to Vercel
+        run: vercel --prod --token ${{ secrets.VERCEL_TOKEN }} --yes
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEB_APP_PROJECT_ID }}
