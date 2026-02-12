@@ -1,3 +1,4 @@
+import { env } from "../env";
 import { db } from "./client";
 import * as schema from "./schema";
 import { betterAuth } from "better-auth";
@@ -66,7 +67,10 @@ export const auth = betterAuth({
     database: {
       generateId: () => crypto.randomUUID(),
     },
+
   },
+  secret: env.BETTER_AUTH_SECRET,
+  baseUrl: env.BETTER_AUTH_URL,
 });
 
 export type Session = typeof auth.$Infer.Session;

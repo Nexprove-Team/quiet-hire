@@ -33,11 +33,14 @@ jobs:
 
       - name: Build
         run: |
-          cat >> .env <<EOF
+          cat >> ./apps/web/.env <<EOF
           DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
           TRIGGER_SECRET_KEY="placeholder"
           TRIGGER_PROJECT_ID="placeholder"
           RESEND_API_KEY="placeholder"
+          BETTER_AUTH_URL="http://localhost:3000"
+          BETTER_AUTH_SECRET="somthingsecret"
+          NEXT_PUBLIC_BETTER_AUTH_URL="http://localhost:3000"
           EOF
           pnpm build
 

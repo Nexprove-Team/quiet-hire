@@ -2,11 +2,14 @@ import {
   usernameClient,
   multiSessionClient,
   inferAdditionalFields,
+  emailOTPClient
 } from "better-auth/client/plugins";
+import { env } from "@/env/client";
 import type { auth } from "@hackhyre/db/auth";
 import { createAuthClient } from "better-auth/react";
-import { emailOTPClient } from "better-auth/client/plugins"
+
 export const authClient = createAuthClient({
+  baseURL: env.NEXT_PUBLIC_BETTER_AUTH_URL,
   plugins: [
     usernameClient(),
     multiSessionClient(),
