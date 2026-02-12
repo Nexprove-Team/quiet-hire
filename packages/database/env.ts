@@ -10,4 +10,5 @@ export const env = createEnv({
     BETTER_AUTH_URL: z.url(),
   },
   runtimeEnv: process.env,
+  skipValidation: true
 });
