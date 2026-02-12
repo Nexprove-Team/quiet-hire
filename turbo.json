@@ -8,7 +8,9 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "TRIGGER_SECRET_KEY",
-    "TRIGGER_PROJECT_ID"
+    "TRIGGER_PROJECT_ID",
+    "GOOGLE_GENERATIVE_AI_API_KEY",
+    "BLOB_READ_WRITE_TOKEN"
   ],
   "ui": "tui",
   "tasks": {

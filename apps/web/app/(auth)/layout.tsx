@@ -11,7 +11,7 @@ export default function AuthLayout({
         <AuthBrandingPanel />
       </div>
       <div className="flex w-full flex-col items-center justify-center px-6 py-10 lg:w-1/2">
-        <div className="w-full max-w-md">{children}</div>
+        <div className="w-full max-w-lg">{children}</div>
       </div>
     </div>
   )

@@ -13,8 +13,11 @@
   "aliases": {
     "components": "@hackhyre/ui/components",
     "utils": "@hackhyre/ui/lib/utils",
-    "hooks": "@hackhyre/ui/hooks",
+    "ui": "@hackhyre/ui/components",
     "lib": "@hackhyre/ui/lib",
-    "ui": "@hackhyre/ui/components"
+    "hooks": "@hackhyre/ui/hooks"
+  },
+  "registries": {
+    "@ai-elements": "https://ai-sdk.dev/elements/api/registry/{name}.json"
   }
 }

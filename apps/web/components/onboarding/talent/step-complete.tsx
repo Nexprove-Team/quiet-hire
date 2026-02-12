@@ -1,14 +1,49 @@
 "use client";
 
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { TickCircle, ArrowRight } from "@hackhyre/ui/icons";
+import { Loader2 } from "lucide-react";
 
 import { Button } from "@hackhyre/ui/components/button";
+import { saveCandidateProfile } from "@/actions/onboarding";
 import type { StepProps } from "../onboarding-wizard";
 
-export function TalentStepComplete({ user }: StepProps) {
+export function TalentStepComplete({ user, data }: StepProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [saved, setSaved] = useState(false);
+  const didSave = useRef(false);
+
+  useEffect(() => {
+    if (didSave.current) return;
+    didSave.current = true;
+
+    startTransition(async () => {
+      await saveCandidateProfile({
+        headline: data.headline,
+        bio: data.bio,
+        skills: data.skills,
+        experienceYears: data.experienceYears,
+        location: data.location,
+        isOpenToWork: data.isOpenToWork,
+        linkedinUrl: data.linkedinUrl,
+        githubUrl: data.githubUrl,
+        portfolioUrl: data.portfolioUrl,
+      });
+      setSaved(true);
+    });
+  }, [data, startTransition]);
+
+  if (isPending && !saved) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">Saving your profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center space-y-6 py-8 text-center">

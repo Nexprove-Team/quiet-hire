@@ -1,99 +1,104 @@
-"use client";
+'use client'
 
-import { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { StepIndicator } from "./step-indicator";
+import { useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { StepIndicator } from './step-indicator'
 
 // Talent steps
-import { TalentStepProfile } from "./talent/step-profile";
-import { TalentStepSkills } from "./talent/step-skills";
-import { TalentStepPreferences } from "./talent/step-preferences";
-import { TalentStepComplete } from "./talent/step-complete";
+import { TalentStepProfile } from './talent/step-profile'
+import { TalentStepSkills } from './talent/step-skills'
+import { TalentStepPreferences } from './talent/step-preferences'
+import { TalentStepComplete } from './talent/step-complete'
 
 // Recruiter steps
-import { RecruiterStepCompany } from "./recruiter/step-company";
-import { RecruiterStepDetails } from "./recruiter/step-details";
-import { RecruiterStepFirstJob } from "./recruiter/step-first-job";
-import { RecruiterStepComplete } from "./recruiter/step-complete";
+import { RecruiterStepCompany } from './recruiter/step-company'
+import { RecruiterStepDetails } from './recruiter/step-details'
+import { RecruiterStepFirstJob } from './recruiter/step-first-job'
+import { RecruiterStepComplete } from './recruiter/step-complete'
 
 interface OnboardingUser {
-  id: string;
-  name: string;
-  email: string;
-  role: "candidate" | "recruiter";
+  id: string
+  name: string
+  email: string
+  role: 'candidate' | 'recruiter'
 }
 
 export interface OnboardingData {
   // Talent
-  headline?: string;
-  bio?: string;
-  skills?: string[];
-  experienceYears?: number;
-  location?: string;
-  isOpenToWork?: boolean;
-  linkedinUrl?: string;
-  githubUrl?: string;
-  portfolioUrl?: string;
-  preferredEmploymentTypes?: string[];
-  preferredExperienceLevel?: string;
-  isRemotePreferred?: boolean;
-  salaryMin?: number;
-  salaryMax?: number;
+  headline?: string
+  bio?: string
+  skills?: string[]
+  experienceYears?: number
+  location?: string
+  isOpenToWork?: boolean
+  linkedinUrl?: string
+  githubUrl?: string
+  portfolioUrl?: string
+  preferredEmploymentTypes?: string[]
+  preferredExperienceLevel?: string
+  isRemotePreferred?: boolean
+  salaryMin?: number
+  salaryMax?: number
 
   // Recruiter
-  companyName?: string;
-  companyWebsite?: string;
-  companyLogoUrl?: string;
-  companyDescription?: string;
-  companyMission?: string;
-  companyLinkedinUrl?: string;
-  companyTwitterUrl?: string;
-  companyId?: string;
+  companyName?: string
+  companyWebsite?: string
+  companyLogoUrl?: string
+  companyDescription?: string
+  companyMission?: string
+  companyLinkedinUrl?: string
+  companyTwitterUrl?: string
+  companyId?: string
 
   // Job draft
-  jobTitle?: string;
-  jobDescription?: string;
-  jobEmploymentType?: string;
-  jobExperienceLevel?: string;
-  jobLocation?: string;
-  jobIsRemote?: boolean;
+  jobTitle?: string
+  jobDescription?: string
+  jobEmploymentType?: string
+  jobExperienceLevel?: string
+  jobLocation?: string
+  jobIsRemote?: boolean
 }
 
 export interface StepProps {
-  user: OnboardingUser;
-  data: OnboardingData;
-  onUpdate: (updates: Partial<OnboardingData>) => void;
-  onNext: () => void;
-  onBack: () => void;
+  user: OnboardingUser
+  data: OnboardingData
+  onUpdate: (updates: Partial<OnboardingData>) => void
+  onNext: () => void
+  onBack: () => void
 }
 
-const TALENT_STEPS = ["Profile", "Skills", "Preferences", "Done"];
-const RECRUITER_STEPS = ["Company", "Details", "First Job", "Done"];
+const TALENT_STEPS = ['Profile', 'Skills', 'Preferences', 'Done']
+const RECRUITER_STEPS = ['Company', 'Details', 'First Job', 'Done']
 
-export function OnboardingWizard({ user }: { user: OnboardingUser }) {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [data, setData] = useState<OnboardingData>({});
-  const [direction, setDirection] = useState(1); // 1 = forward, -1 = backward
+interface OnboardingWizardProps {
+  user: OnboardingUser
+  onBack?: () => void
+}
 
-  const steps =
-    user.role === "candidate" ? TALENT_STEPS : RECRUITER_STEPS;
+export function OnboardingWizard({ user, onBack }: OnboardingWizardProps) {
+  const [currentStep, setCurrentStep] = useState(0)
+  const [data, setData] = useState<OnboardingData>({})
+  const [direction, setDirection] = useState(1)
 
-  const handleUpdate = useCallback(
-    (updates: Partial<OnboardingData>) => {
-      setData((prev) => ({ ...prev, ...updates }));
-    },
-    []
-  );
+  const steps = user.role === 'candidate' ? TALENT_STEPS : RECRUITER_STEPS
+
+  const handleUpdate = useCallback((updates: Partial<OnboardingData>) => {
+    setData((prev) => ({ ...prev, ...updates }))
+  }, [])
 
   const handleNext = useCallback(() => {
-    setDirection(1);
-    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1));
-  }, [steps.length]);
+    setDirection(1)
+    setCurrentStep((prev) => Math.min(prev + 1, steps.length - 1))
+  }, [steps.length])
 
   const handleBack = useCallback(() => {
-    setDirection(-1);
-    setCurrentStep((prev) => Math.max(prev - 1, 0));
-  }, []);
+    if (currentStep === 0 && onBack) {
+      onBack()
+      return
+    }
+    setDirection(-1)
+    setCurrentStep((prev) => Math.max(prev - 1, 0))
+  }, [currentStep, onBack])
 
   const stepProps: StepProps = {
     user,
@@ -101,24 +106,23 @@ export function OnboardingWizard({ user }: { user: OnboardingUser }) {
     onUpdate: handleUpdate,
     onNext: handleNext,
     onBack: handleBack,
-  };
+  }
 
   const talentSteps = [
     <TalentStepProfile key="profile" {...stepProps} />,
     <TalentStepSkills key="skills" {...stepProps} />,
     <TalentStepPreferences key="preferences" {...stepProps} />,
     <TalentStepComplete key="complete" {...stepProps} />,
-  ];
+  ]
 
   const recruiterSteps = [
     <RecruiterStepCompany key="company" {...stepProps} />,
     <RecruiterStepDetails key="details" {...stepProps} />,
     <RecruiterStepFirstJob key="first-job" {...stepProps} />,
     <RecruiterStepComplete key="complete" {...stepProps} />,
-  ];
+  ]
 
-  const currentSteps =
-    user.role === "candidate" ? talentSteps : recruiterSteps;
+  const currentSteps = user.role === 'candidate' ? talentSteps : recruiterSteps
 
   return (
     <div className="space-y-8">
@@ -131,11 +135,11 @@ export function OnboardingWizard({ user }: { user: OnboardingUser }) {
           initial={{ opacity: 0, x: direction * 24 }}
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: direction * -24 }}
-          transition={{ duration: 0.25, ease: "easeInOut" }}
+          transition={{ duration: 0.25, ease: 'easeInOut' }}
         >
           {currentSteps[currentStep]}
         </motion.div>
       </AnimatePresence>
     </div>
-  );
+  )
 }
