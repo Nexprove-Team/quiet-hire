@@ -34,7 +34,7 @@ export default function RootLayout({
             fontBricolage.variable
           )}
         >
-          <DefaultProvider>{children}</DefaultProvider>
+          <DefaultProvider defaultTheme="light">{children}</DefaultProvider>
         </body>
       </html>
     </NuqsAdapter>

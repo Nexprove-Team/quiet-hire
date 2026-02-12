@@ -16,7 +16,7 @@ export default function HomeLayout({
   return (
     <LayoutWrapper>
       <Header user={user} />
-      <main>{children}</main>
+      <main className="flex-1">{children}</main>
       <Footer />
     </LayoutWrapper>
   )

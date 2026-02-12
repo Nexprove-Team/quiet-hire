@@ -12,6 +12,7 @@ export function DefaultProvider({
   children,
   showThemeSwitcher = true,
   showQueryDevtools = inDevEnvironment,
+  defaultTheme = 'system',
   ...rest
 }: ThemeProviderProps & {
   showThemeSwitcher?: boolean
@@ -19,7 +20,7 @@ export function DefaultProvider({
 }) {
   return (
     <QueryProvider>
-      <ThemeProvider defaultTheme="light" {...rest}>
+      <ThemeProvider defaultTheme={defaultTheme} {...rest}>
         {children}
         <Toaster richColors />
         {showQueryDevtools && <ReactQueryDevtools initialIsOpen={false} />}

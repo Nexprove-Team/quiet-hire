@@ -1,4 +1,5 @@
 'use client'
+
 import Link from 'next/link'
 import {
   InstagramIcon,
@@ -6,8 +7,12 @@ import {
   GithubIcon,
   XIcon,
 } from '@hackhyre/ui/icons'
+import { Send } from '@hackhyre/ui/icons'
 import { usePathname } from 'next/navigation'
 import { cn } from '@hackhyre/ui/lib/utils'
+import * as motion from 'motion/react-client'
+
+/* ── Link data ─────────────────────────────────────────────── */
 
 const FOOTER_SECTIONS = [
   {
@@ -78,7 +83,7 @@ const SOCIAL_LINKS = [
   },
   {
     label: 'GitHub',
-    href: '#',
+    href: 'https://github.com/Nexprove-Team/hykehyre',
     icon: <GithubIcon />,
   },
   {
@@ -88,16 +93,56 @@ const SOCIAL_LINKS = [
   },
 ] as const
 
+const LEGAL_LINKS = [
+  { label: 'Privacy', href: '#' },
+  { label: 'Terms', href: '#' },
+  { label: 'Cookies', href: '#' },
+] as const
+
+/* ── Animation variants ────────────────────────────────────── */
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0 },
+}
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+}
+
+/* ── Footer component ──────────────────────────────────────── */
+
 export function Footer() {
   const path = usePathname()
+  const jl = path.includes('/jobs-listing')
+
   return (
     <footer
       className={cn(
-        'border-t border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950'
+        'border-t transition-colors duration-300 ease-in-out',
+        jl
+          ? 'border-neutral-800 bg-black'
+          : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950'
       )}
     >
-      <div className="mx-auto max-w-375 px-4 pt-16 sm:px-6 lg:px-8">
-        <div className="bg-brand-navy relative overflow-hidden rounded-2xl px-6 py-12 sm:px-12 sm:py-16 dark:border dark:border-neutral-800">
+      {/* ── CTA Banner ───────────────────────────────────── */}
+      <motion.div
+        className="mx-auto max-w-375 px-4 pt-16 sm:px-6 lg:px-8"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-60px' }}
+        variants={fadeUp}
+        transition={{ duration: 0.5 }}
+      >
+        <div
+          className={cn(
+            'bg-brand-navy relative overflow-hidden rounded-2xl px-6 py-12 sm:px-12 sm:py-16',
+            jl
+              ? 'border border-neutral-800'
+              : 'dark:border dark:border-neutral-800'
+          )}
+        >
           {/* Decorative gradient blobs */}
           <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-[oklch(0.82_0.22_155)] opacity-[0.07] blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[oklch(0.82_0.22_155)] opacity-[0.05] blur-3xl" />
@@ -142,13 +187,31 @@ export function Footer() {
             </Link>
           </div>
         </div>
-      </div>
+      </motion.div>
 
+      {/* ── Main link grid ───────────────────────────────── */}
       <div className="mx-auto max-w-375 px-4 pt-14 pb-10 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5">
+        <motion.div
+          className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5"
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: '-40px' }}
+          variants={staggerContainer}
+        >
           {FOOTER_SECTIONS.map((section) => (
-            <div key={section.title}>
-              <h4 className="text-[13px] font-semibold tracking-tight text-neutral-900 dark:text-neutral-100">
+            <motion.div
+              key={section.title}
+              variants={fadeUp}
+              transition={{ duration: 0.4 }}
+            >
+              <h4
+                className={cn(
+                  'text-[13px] font-semibold tracking-tight',
+                  jl
+                    ? 'text-neutral-100'
+                    : 'text-neutral-900 dark:text-neutral-100'
+                )}
+              >
                 {section.title}
               </h4>
               <ul className="mt-4 space-y-2.5">
@@ -156,110 +219,186 @@ export function Footer() {
                   <li key={link.label}>
                     <Link
                       href={link.href}
-                      className="text-[13px] text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white"
+                      className={cn(
+                        'text-[13px] transition-colors',
+                        jl
+                          ? 'text-neutral-400 hover:text-white'
+                          : 'text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white'
+                      )}
                     >
                       {link.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
+            </motion.div>
           ))}
+        </motion.div>
+      </div>
+
+      {/* ── Newsletter strip ─────────────────────────────── */}
+      <motion.div
+        className="mx-auto max-w-375 px-4 sm:px-6 lg:px-8"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-40px' }}
+        variants={fadeUp}
+        transition={{ duration: 0.45 }}
+      >
+        <div
+          className={cn(
+            'flex flex-col items-start gap-4 rounded-xl border p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6',
+            jl
+              ? 'border-neutral-800 bg-neutral-900/60'
+              : 'border-neutral-200 bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-900/60'
+          )}
+        >
+          <div className="min-w-0">
+            <p
+              className={cn(
+                'text-[13px] font-semibold',
+                jl
+                  ? 'text-white'
+                  : 'text-neutral-900 dark:text-white'
+              )}
+            >
+              Stay in the loop
+            </p>
+            <p
+              className={cn(
+                'mt-0.5 text-[12px]',
+                jl
+                  ? 'text-neutral-400'
+                  : 'text-neutral-500 dark:text-neutral-400'
+              )}
+            >
+              Get the latest jobs and hiring insights delivered weekly.
+            </p>
+          </div>
+          <form className="flex w-full items-center gap-2 sm:w-auto">
+            <div className="relative flex-1 sm:flex-initial">
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className={cn(
+                  'h-10 w-full rounded-lg border pl-3 pr-3 text-[13px] transition-colors outline-none focus:border-[oklch(0.82_0.22_155)] focus:ring-1 focus:ring-[oklch(0.82_0.22_155)] sm:w-60',
+                  jl
+                    ? 'border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500'
+                    : 'border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500'
+                )}
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-[oklch(0.82_0.22_155)] px-4 text-[13px] font-semibold text-neutral-900 transition-all hover:brightness-110 active:scale-[0.98]"
+            >
+              Subscribe
+              <Send size={14} variant="Linear" />
+            </button>
+          </form>
         </div>
+      </motion.div>
+
+      {/* ── Divider ──────────────────────────────────────── */}
+      <div className="mx-auto max-w-375 px-4 py-8 sm:px-6 lg:px-8">
+        <div
+          className={cn(
+            'border-t',
+            jl
+              ? 'border-neutral-800'
+              : 'border-neutral-200 dark:border-neutral-800'
+          )}
+        />
       </div>
 
-      <div className="mx-auto max-w-375 px-4 sm:px-6 lg:px-8">
-        <div className="border-t border-neutral-200 dark:border-neutral-800" />
-      </div>
-
-      <div className="mx-auto max-w-375 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-8 py-10 lg:flex-row lg:items-end lg:justify-between">
-          {/* Brand + newsletter */}
-          <div className="flex flex-col gap-8 sm:flex-row sm:items-end sm:gap-16">
-            {/* Brand */}
-            <div className="shrink-0">
-              <Link href="/" className="flex items-center gap-0.5">
-                <div className="flex h-9 w-9 items-center justify-center">
-                  <LogoIcon />
-                </div>
-                <p className="font-mono text-[15px] leading-none font-bold tracking-tight dark:text-white">
-                  Hack
-                  <span className="text-[oklch(0.82_0.22_155)]">Hyre</span>
-                </p>
-              </Link>
-              <p className="mt-3 max-w-xs text-[12px] leading-relaxed text-neutral-500 dark:text-neutral-400">
-                The modern job platform connecting ambitious talent with
-                forward-thinking companies.
-              </p>
-            </div>
-
-            {/* Newsletter */}
-            <div>
-              <p className="text-[13px] font-semibold text-neutral-900 dark:text-neutral-100">
-                Newsletter
-              </p>
-              <p className="mt-1 text-[12px] text-neutral-500 dark:text-neutral-400">
-                Subscribe to get the latest updates.
-              </p>
-              <form
-                className="mt-3 flex items-center gap-2"
-                // onSubmit={(e) => e.preventDefault()}
+      {/* ── Bottom bar ───────────────────────────────────── */}
+      <motion.div
+        className="mx-auto max-w-375 px-4 pb-8 sm:px-6 lg:px-8"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-20px' }}
+        variants={fadeUp}
+        transition={{ duration: 0.4 }}
+      >
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          {/* Brand */}
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-0.5">
+              <div className="flex h-9 w-9 items-center justify-center">
+                <LogoIcon />
+              </div>
+              <p
+                className={cn(
+                  'font-mono text-[15px] leading-none font-bold tracking-tight',
+                  jl ? 'text-white' : 'dark:text-white'
+                )}
               >
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="h-9 w-full max-w-56 rounded-lg border border-neutral-200 bg-neutral-50 px-3 text-[13px] text-neutral-900 transition-colors outline-none placeholder:text-neutral-400 focus:border-[oklch(0.82_0.22_155)] focus:ring-1 focus:ring-[oklch(0.82_0.22_155)] dark:border-neutral-700 dark:bg-neutral-900 dark:text-white dark:placeholder:text-neutral-500"
-                />
-                <button
-                  type="submit"
-                  className="bg-brand-navy h-9 shrink-0 rounded-lg px-4 text-[13px] font-semibold text-white transition-colors hover:bg-[#2a2d3f] dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                >
-                  Subscribe
-                </button>
-              </form>
-            </div>
+                Hack
+                <span className="text-[oklch(0.82_0.22_155)]">Hyre</span>
+              </p>
+            </Link>
+            <p
+              className={cn(
+                'hidden max-w-xs text-[12px] leading-relaxed sm:block',
+                jl
+                  ? 'text-neutral-500'
+                  : 'text-neutral-400 dark:text-neutral-500'
+              )}
+            >
+              Connecting ambitious talent with forward-thinking companies.
+            </p>
           </div>
 
           {/* Social links */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             {SOCIAL_LINKS.map((social) => (
               <Link
                 key={social.label}
                 href={social.href}
-                className="flex h-9 w-9 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition-colors hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-white"
+                className={cn(
+                  'flex h-8 w-8 items-center justify-center rounded-lg border transition-colors',
+                  jl
+                    ? 'border-neutral-800 text-neutral-500 hover:border-neutral-600 hover:text-white'
+                    : 'border-neutral-200 text-neutral-400 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-500 dark:hover:border-neutral-600 dark:hover:text-white'
+                )}
                 aria-label={social.label}
+                target="_blank"
               >
                 {social.icon}
               </Link>
             ))}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      <div className="border-t border-neutral-100 bg-neutral-50/50 dark:border-neutral-800 dark:bg-neutral-900/50">
-        <div className="mx-auto flex max-w-375 flex-col items-center justify-between gap-3 px-4 py-5 sm:flex-row sm:px-6 lg:px-8">
-          <p className="text-[12px] text-neutral-400">
+      {/* ── Copyright bar ────────────────────────────────── */}
+      <div
+        className={cn(
+          'border-t',
+          jl
+            ? 'border-neutral-800/60'
+            : 'border-neutral-100 dark:border-neutral-800/60'
+        )}
+      >
+        <div className="mx-auto flex max-w-375 flex-col items-center justify-between gap-2 px-4 py-4 sm:flex-row sm:px-6 lg:px-8">
+          <p className="text-[11px] text-neutral-500">
             &copy; {new Date().getFullYear()} HackHyre. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
-            <Link
-              href="#"
-              className="text-[12px] text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="#"
-              className="text-[12px] text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-            >
-              Terms
-            </Link>
-            <Link
-              href="#"
-              className="text-[12px] text-neutral-400 transition-colors hover:text-neutral-600 dark:hover:text-neutral-300"
-            >
-              Cookies
-            </Link>
+            {LEGAL_LINKS.map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className={cn(
+                  'text-[11px] text-neutral-500 transition-colors',
+                  jl
+                    ? 'hover:text-neutral-300'
+                    : 'hover:text-neutral-700 dark:hover:text-neutral-300'
+                )}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

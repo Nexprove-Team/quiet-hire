@@ -8,7 +8,7 @@ const LayoutWrapper = ({ children }: { children: ReactNode }) => {
   return (
     <div
       className={cn(
-        'min-h-svh transition-colors duration-300 ease-in-out',
+        'flex min-h-svh flex-col transition-colors duration-300 ease-in-out',
         path.includes('/jobs-listing') ? 'bg-white' : 'bg-background'
       )}
     >
