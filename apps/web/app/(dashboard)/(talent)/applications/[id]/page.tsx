@@ -1,18 +1,18 @@
-"use client";
+'use client'
 
-import { use, useMemo } from "react";
-import Link from "next/link";
-import { motion } from "motion/react";
+import { use, useMemo } from 'react'
+import Link from 'next/link'
+import { motion } from 'motion/react'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@hackhyre/ui/components/card";
-import { Button } from "@hackhyre/ui/components/button";
-import { Badge } from "@hackhyre/ui/components/badge";
-import { Separator } from "@hackhyre/ui/components/separator";
-import { Skeleton } from "@hackhyre/ui/components/skeleton";
+} from '@hackhyre/ui/components/card'
+import { Button } from '@hackhyre/ui/components/button'
+import { Badge } from '@hackhyre/ui/components/badge'
+import { Separator } from '@hackhyre/ui/components/separator'
+import { Skeleton } from '@hackhyre/ui/components/skeleton'
 import {
   ArrowLeft,
   Briefcase,
@@ -28,56 +28,56 @@ import {
   Send,
   Edit,
   LinkIcon,
-} from "@hackhyre/ui/icons";
-import { cn } from "@hackhyre/ui/lib/utils";
-import { APPLICATION_STATUS_CONFIG } from "@/lib/constants";
-import { useApplication } from "@/hooks/use-applications";
-import type { Icon } from "@hackhyre/ui/icons";
+} from '@hackhyre/ui/icons'
+import { cn } from '@hackhyre/ui/lib/utils'
+import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
+import { useApplication } from '@/hooks/use-applications'
+import type { Icon } from '@hackhyre/ui/icons'
 
 function formatSalary(
   min: number | null,
   max: number | null,
-  currency: string,
+  currency: string
 ) {
-  if (!min && !max) return null;
+  if (!min && !max) return null
   const fmt = (v: number) =>
-    new Intl.NumberFormat("en-US", {
-      style: "currency",
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
       currency,
       maximumFractionDigits: 0,
-    }).format(v);
-  if (min && max) return `${fmt(min)} – ${fmt(max)}`;
-  if (min) return `From ${fmt(min)}`;
-  return `Up to ${fmt(max!)}`;
+    }).format(v)
+  if (min && max) return `${fmt(min)} – ${fmt(max)}`
+  if (min) return `From ${fmt(min)}`
+  return `Up to ${fmt(max!)}`
 }
 
 function formatDate(date: Date | string) {
-  const d = typeof date === "string" ? new Date(date) : date;
-  return d.toLocaleDateString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-  });
+  const d = typeof date === 'string' ? new Date(date) : date
+  return d.toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
 function formatEmploymentType(type: string) {
   return type
-    .split("_")
+    .split('_')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(" ");
+    .join(' ')
 }
 
 function formatRelativeDate(date: Date | string): string {
-  const now = new Date();
-  const d = typeof date === "string" ? new Date(date) : date;
-  const diffMs = now.getTime() - d.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const now = new Date()
+  const d = typeof date === 'string' ? new Date(date) : date
+  const diffMs = now.getTime() - d.getTime()
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
 
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "1d ago";
-  if (diffDays < 7) return `${diffDays}d ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  if (diffDays === 0) return 'Today'
+  if (diffDays === 1) return '1d ago'
+  if (diffDays < 7) return `${diffDays}d ago`
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
 
 function InfoRow({
@@ -85,9 +85,9 @@ function InfoRow({
   label,
   value,
 }: {
-  icon: typeof Briefcase;
-  label: string;
-  value: React.ReactNode;
+  icon: typeof Briefcase
+  label: string
+  value: React.ReactNode
 }) {
   return (
     <div className="flex items-start gap-3 py-2.5">
@@ -95,13 +95,13 @@ function InfoRow({
         <Icon size={15} variant="Bold" className="text-muted-foreground" />
       </div>
       <div className="min-w-0">
-        <p className="text-muted-foreground text-[11px] font-medium uppercase tracking-wider">
+        <p className="text-muted-foreground text-[11px] font-medium tracking-wider uppercase">
           {label}
         </p>
         <p className="mt-0.5 text-[13px] font-medium">{value}</p>
       </div>
     </div>
-  );
+  )
 }
 
 function ListSection({
@@ -109,9 +109,9 @@ function ListSection({
   title,
   items,
 }: {
-  icon: typeof DocumentText;
-  title: string;
-  items: string[];
+  icon: typeof DocumentText
+  title: string
+  items: string[]
 }) {
   return (
     <div>
@@ -134,36 +134,31 @@ function ListSection({
         ))}
       </ul>
     </div>
-  );
+  )
 }
 
 function ScoreRing({ score }: { score: number }) {
-  const percentage = Math.round(score * 100);
-  const circumference = 2 * Math.PI * 40;
-  const offset = circumference - score * circumference;
+  const percentage = Math.round(score * 100)
+  const circumference = 2 * Math.PI * 40
+  const offset = circumference - score * circumference
 
   const color =
     percentage >= 80
-      ? "text-emerald-500"
+      ? 'text-emerald-500'
       : percentage >= 65
-        ? "text-amber-500"
-        : "text-rose-500";
+        ? 'text-amber-500'
+        : 'text-rose-500'
 
   const strokeColor =
     percentage >= 80
-      ? "stroke-emerald-500"
+      ? 'stroke-emerald-500'
       : percentage >= 65
-        ? "stroke-amber-500"
-        : "stroke-rose-500";
+        ? 'stroke-amber-500'
+        : 'stroke-rose-500'
 
   return (
     <div className="relative flex h-24 w-24 items-center justify-center">
-      <svg
-        className="-rotate-90"
-        width="96"
-        height="96"
-        viewBox="0 0 100 100"
-      >
+      <svg className="-rotate-90" width="96" height="96" viewBox="0 0 100 100">
         <circle
           cx="50"
           cy="50"
@@ -183,54 +178,54 @@ function ScoreRing({ score }: { score: number }) {
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: offset }}
-          transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+          transition={{ duration: 1, ease: 'easeOut', delay: 0.3 }}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={cn("text-xl font-bold tabular-nums", color)}>
+        <span className={cn('text-xl font-bold tabular-nums', color)}>
           {percentage}%
         </span>
-        <span className="text-[10px] font-medium text-muted-foreground">
+        <span className="text-muted-foreground text-[10px] font-medium">
           Match
         </span>
       </div>
     </div>
-  );
+  )
 }
 
 interface TimelineEvent {
-  id: string;
-  type: "applied" | "status_change";
-  title: string;
-  description: string;
-  timestamp: Date | string;
+  id: string
+  type: 'applied' | 'status_change'
+  title: string
+  description: string
+  timestamp: Date | string
 }
 
 const TIMELINE_ICON_MAP: Record<
-  TimelineEvent["type"],
+  TimelineEvent['type'],
   { icon: Icon; className: string }
 > = {
-  applied: { icon: Briefcase, className: "bg-blue-500/10 text-blue-600" },
+  applied: { icon: Briefcase, className: 'bg-blue-500/10 text-blue-600' },
   status_change: {
     icon: TickCircle,
-    className: "bg-emerald-500/10 text-emerald-600",
+    className: 'bg-emerald-500/10 text-emerald-600',
   },
-};
+}
 
 const STATUS_LABELS: Record<string, string> = {
-  not_reviewed: "Submitted",
-  under_review: "Under Review",
-  interviewing: "Interviewing",
-  rejected: "Rejected",
-  hired: "Hired",
-};
+  not_reviewed: 'Submitted',
+  under_review: 'Under Review',
+  interviewing: 'Interviewing',
+  rejected: 'Rejected',
+  hired: 'Hired',
+}
 
 function LoadingSkeleton() {
   return (
     <div className="space-y-6">
       <Skeleton className="h-8 w-40" />
       <div>
-        <Skeleton className="h-8 w-72 mb-2" />
+        <Skeleton className="mb-2 h-8 w-72" />
         <Skeleton className="h-4 w-48" />
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
@@ -247,41 +242,39 @@ function LoadingSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 export default function ApplicationDetailPage({
   params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = use(params);
-  const { data: app, isLoading, error } = useApplication(id);
+}: PageProps<'/applications/[id]'>) {
+  const { id } = use(params)
+  const { data: app, isLoading, error } = useApplication(id)
 
   const timeline = useMemo(() => {
-    if (!app) return [];
+    if (!app) return []
     const events: TimelineEvent[] = [
       {
-        id: "tl-applied",
-        type: "applied",
-        title: "Application submitted",
+        id: 'tl-applied',
+        type: 'applied',
+        title: 'Application submitted',
         description: `You applied for ${app.job.title}`,
         timestamp: app.appliedAt,
       },
-    ];
-    if (app.status !== "not_reviewed") {
+    ]
+    if (app.status !== 'not_reviewed') {
       events.push({
-        id: "tl-status",
-        type: "status_change",
+        id: 'tl-status',
+        type: 'status_change',
         title: `Status: ${STATUS_LABELS[app.status] ?? app.status}`,
         description: `Your application is now ${(STATUS_LABELS[app.status] ?? app.status).toLowerCase()}`,
         timestamp: app.appliedAt,
-      });
+      })
     }
-    return events;
-  }, [app]);
+    return events
+  }, [app])
 
-  if (isLoading) return <LoadingSkeleton />;
+  if (isLoading) return <LoadingSkeleton />
 
   if (error) {
     return (
@@ -303,15 +296,15 @@ export default function ApplicationDetailPage({
             variant="Linear"
             className="text-muted-foreground/30 mb-3"
           />
-          <p className="text-[13px] font-medium text-muted-foreground">
+          <p className="text-muted-foreground text-[13px] font-medium">
             Failed to load application
           </p>
-          <p className="text-[12px] text-muted-foreground/70 mt-1">
+          <p className="text-muted-foreground/70 mt-1 text-[12px]">
             Please try refreshing the page.
           </p>
         </div>
       </div>
-    );
+    )
   }
 
   if (!app) {
@@ -334,24 +327,28 @@ export default function ApplicationDetailPage({
             variant="Linear"
             className="text-muted-foreground/30 mb-3"
           />
-          <p className="text-[13px] font-medium text-muted-foreground">
+          <p className="text-muted-foreground text-[13px] font-medium">
             Application not found
           </p>
-          <p className="text-[12px] text-muted-foreground/70 mt-1">
+          <p className="text-muted-foreground/70 mt-1 text-[12px]">
             This application may have been removed or you don't have access.
           </p>
         </div>
       </div>
-    );
+    )
   }
 
-  const statusConfig = APPLICATION_STATUS_CONFIG[app.status];
-  const score = app.relevanceScore ?? 0;
-  const salary = formatSalary(app.job.salaryMin, app.job.salaryMax, app.job.salaryCurrency);
-  const companyName = app.company?.name ?? "Unknown";
-  const matchFeedback = app.matchAnalysis?.feedback ?? null;
-  const matchStrengths = app.matchAnalysis?.strengths ?? [];
-  const matchGaps = app.matchAnalysis?.gaps ?? [];
+  const statusConfig = APPLICATION_STATUS_CONFIG[app.status]
+  const score = app.relevanceScore ?? 0
+  const salary = formatSalary(
+    app.job.salaryMin,
+    app.job.salaryMax,
+    app.job.salaryCurrency
+  )
+  const companyName = app.company?.name ?? 'Unknown'
+  const matchFeedback = app.matchAnalysis?.feedback ?? null
+  const matchStrengths = app.matchAnalysis?.strengths ?? []
+  const matchGaps = app.matchAnalysis?.gaps ?? []
 
   return (
     <div className="space-y-6">
@@ -379,8 +376,8 @@ export default function ApplicationDetailPage({
             {app.job.title}
           </h1>
           <Badge
-            variant={statusConfig?.variant as "default"}
-            className={cn("text-[11px] font-medium", statusConfig?.className)}
+            variant={statusConfig?.variant as 'default'}
+            className={cn('text-[11px] font-medium', statusConfig?.className)}
           >
             {statusConfig?.label}
           </Badge>
@@ -410,18 +407,18 @@ export default function ApplicationDetailPage({
                   <ScoreRing score={score} />
                   <div className="min-w-0 flex-1">
                     {matchFeedback && (
-                      <p className="text-[13px] leading-relaxed text-muted-foreground">
+                      <p className="text-muted-foreground text-[13px] leading-relaxed">
                         {matchFeedback}
                       </p>
                     )}
                     {!matchFeedback && (
-                      <p className="text-[13px] leading-relaxed text-muted-foreground/60 italic">
+                      <p className="text-muted-foreground/60 text-[13px] leading-relaxed italic">
                         No match analysis available yet.
                       </p>
                     )}
                     {matchStrengths.length > 0 && (
                       <div className="mt-4">
-                        <p className="text-[12px] font-semibold text-emerald-600 mb-1.5">
+                        <p className="mb-1.5 text-[12px] font-semibold text-emerald-600">
                           Strengths
                         </p>
                         <ul className="space-y-1.5">
@@ -434,7 +431,7 @@ export default function ApplicationDetailPage({
                                 delay: 0.5 + i * 0.08,
                                 duration: 0.2,
                               }}
-                              className="flex items-start gap-2 text-[12px] text-muted-foreground"
+                              className="text-muted-foreground flex items-start gap-2 text-[12px]"
                             >
                               <TickCircle
                                 size={13}
@@ -449,7 +446,7 @@ export default function ApplicationDetailPage({
                     )}
                     {matchGaps.length > 0 && (
                       <div className="mt-3">
-                        <p className="text-[12px] font-semibold text-amber-600 mb-1.5">
+                        <p className="mb-1.5 text-[12px] font-semibold text-amber-600">
                           Suggestions
                         </p>
                         <ul className="space-y-1.5">
@@ -460,12 +457,10 @@ export default function ApplicationDetailPage({
                               animate={{ opacity: 1, x: 0 }}
                               transition={{
                                 delay:
-                                  0.5 +
-                                  matchStrengths.length * 0.08 +
-                                  i * 0.08,
+                                  0.5 + matchStrengths.length * 0.08 + i * 0.08,
                                 duration: 0.2,
                               }}
-                              className="flex items-start gap-2 text-[12px] text-muted-foreground"
+                              className="text-muted-foreground flex items-start gap-2 text-[12px]"
                             >
                               <Star
                                 size={13}
@@ -534,7 +529,11 @@ export default function ApplicationDetailPage({
                     <Separator />
                     <div>
                       <div className="mb-3 flex items-center gap-2">
-                        <Code size={16} variant="Bold" className="text-primary" />
+                        <Code
+                          size={16}
+                          variant="Bold"
+                          className="text-primary"
+                        />
                         <h3 className="text-[13px] font-semibold">Skills</h3>
                       </div>
                       <div className="flex flex-wrap gap-2">
@@ -577,16 +576,16 @@ export default function ApplicationDetailPage({
                 {/* Cover Letter */}
                 {app.coverLetter ? (
                   <div>
-                    <p className="text-muted-foreground mb-2 text-[12px] uppercase tracking-wider font-medium">
+                    <p className="text-muted-foreground mb-2 text-[12px] font-medium tracking-wider uppercase">
                       Cover Letter
                     </p>
-                    <p className="text-[13px] leading-relaxed text-muted-foreground">
+                    <p className="text-muted-foreground text-[13px] leading-relaxed">
                       {app.coverLetter}
                     </p>
                   </div>
                 ) : (
                   <div>
-                    <p className="text-muted-foreground mb-2 text-[12px] uppercase tracking-wider font-medium">
+                    <p className="text-muted-foreground mb-2 text-[12px] font-medium tracking-wider uppercase">
                       Cover Letter
                     </p>
                     <p className="text-muted-foreground/60 text-[13px] italic">
@@ -599,7 +598,7 @@ export default function ApplicationDetailPage({
 
                 {/* Attachments */}
                 <div>
-                  <p className="text-muted-foreground mb-3 text-[12px] uppercase tracking-wider font-medium">
+                  <p className="text-muted-foreground mb-3 text-[12px] font-medium tracking-wider uppercase">
                     Attachments
                   </p>
                   <div className="space-y-2">
@@ -620,7 +619,11 @@ export default function ApplicationDetailPage({
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-[12px]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[12px]"
+                        >
                           View
                         </Button>
                       </div>
@@ -642,7 +645,11 @@ export default function ApplicationDetailPage({
                             </p>
                           </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="text-[12px]">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-[12px]"
+                        >
                           Open
                         </Button>
                       </div>
@@ -675,7 +682,7 @@ export default function ApplicationDetailPage({
                     label="Location"
                     value={
                       <span className="flex items-center gap-1.5">
-                        {app.job.location ?? "N/A"}
+                        {app.job.location ?? 'N/A'}
                         {app.job.isRemote && (
                           <Badge
                             variant="outline"
@@ -696,7 +703,9 @@ export default function ApplicationDetailPage({
                     icon={Star}
                     label="Experience Level"
                     value={
-                      <span className="capitalize">{app.job.experienceLevel}</span>
+                      <span className="capitalize">
+                        {app.job.experienceLevel}
+                      </span>
                     }
                   />
                   {salary && (
@@ -725,18 +734,18 @@ export default function ApplicationDetailPage({
               </CardHeader>
               <CardContent className="space-y-0">
                 {[...timeline].reverse().map((event, i) => {
-                  const config = TIMELINE_ICON_MAP[event.type];
-                  const EventIcon = config?.icon ?? Clock;
+                  const config = TIMELINE_ICON_MAP[event.type]
+                  const EventIcon = config?.icon ?? Clock
                   const iconClass =
-                    config?.className ?? "bg-muted text-muted-foreground";
+                    config?.className ?? 'bg-muted text-muted-foreground'
 
                   return (
                     <div key={event.id} className="flex gap-3 py-2.5">
                       <div className="flex flex-col items-center">
                         <div
                           className={cn(
-                            "flex h-8 w-8 shrink-0 items-center justify-center rounded-full",
-                            iconClass,
+                            'flex h-8 w-8 shrink-0 items-center justify-center rounded-full',
+                            iconClass
                           )}
                         >
                           <EventIcon size={14} variant="Bold" />
@@ -757,7 +766,7 @@ export default function ApplicationDetailPage({
                         </p>
                       </div>
                     </div>
-                  );
+                  )
                 })}
               </CardContent>
             </Card>
@@ -799,5 +808,5 @@ export default function ApplicationDetailPage({
         </div>
       </div>
     </div>
-  );
+  )
 }
