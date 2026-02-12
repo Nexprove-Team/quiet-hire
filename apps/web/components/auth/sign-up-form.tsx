@@ -132,8 +132,8 @@ export function SignUpForm() {
       return;
     }
 
-    toast.success("Account created!");
-    router.push(`/onboarding?role=${selectedRole}`);
+    toast.success("Account created! Check your email for a verification code.");
+    router.push(`/verify-email?email=${encodeURIComponent(values.email)}&role=${selectedRole}`);
   }
 
   return (
