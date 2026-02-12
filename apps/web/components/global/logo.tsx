@@ -1,20 +1,18 @@
+import Image from 'next/image'
 import Link, { LinkProps } from 'next/link'
-import { Logo as LogoIcon } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 
 export function Logo({
   isJobListing,
   href,
   ...rest
-}: LinkProps & { isJobListing?: boolean }) {
+}: Omit<LinkProps, 'href'> & { isJobListing?: boolean; href?: string }) {
   return (
-    <Link href={href ?? '/'} className="flex items-center gap-0.5" {...rest}>
-      <div className="flex h-9 w-9 items-center justify-center">
-        <LogoIcon />
-      </div>
+    <Link href={href ?? '/'} className="flex items-center gap-px" {...rest}>
+      <Image src="/logo.png" alt="HackHyre Logo" width={36} height={36} />
       <p
         className={cn(
-          'font-mono text-[15px] leading-none font-bold tracking-tight',
+          'font-mono text-2xl leading-none font-bold tracking-tight',
           isJobListing ? 'text-white' : ''
         )}
       >

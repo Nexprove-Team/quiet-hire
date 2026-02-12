@@ -11,8 +11,7 @@ import { Send } from '@hackhyre/ui/icons'
 import { usePathname } from 'next/navigation'
 import { cn } from '@hackhyre/ui/lib/utils'
 import * as motion from 'motion/react-client'
-
-/* ── Link data ─────────────────────────────────────────────── */
+import { Logo } from '../global/logo'
 
 const FOOTER_SECTIONS = [
   {
@@ -99,8 +98,6 @@ const LEGAL_LINKS = [
   { label: 'Cookies', href: '#' },
 ] as const
 
-/* ── Animation variants ────────────────────────────────────── */
-
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: { opacity: 1, y: 0 },
@@ -110,8 +107,6 @@ const staggerContainer = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.08 } },
 }
-
-/* ── Footer component ──────────────────────────────────────── */
 
 export function Footer() {
   const path = usePathname()
@@ -126,7 +121,6 @@ export function Footer() {
           : 'border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-950'
       )}
     >
-      {/* ── CTA Banner ───────────────────────────────────── */}
       <motion.div
         className="mx-auto max-w-375 px-4 pt-16 sm:px-6 lg:px-8"
         initial="hidden"
@@ -143,11 +137,9 @@ export function Footer() {
               : 'dark:border dark:border-neutral-800'
           )}
         >
-          {/* Decorative gradient blobs */}
           <div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-[oklch(0.82_0.22_155)] opacity-[0.07] blur-3xl" />
           <div className="pointer-events-none absolute -bottom-16 -left-16 h-48 w-48 rounded-full bg-[oklch(0.82_0.22_155)] opacity-[0.05] blur-3xl" />
 
-          {/* Grid pattern overlay */}
           <div
             className="pointer-events-none absolute inset-0 opacity-[0.04]"
             style={{
@@ -188,8 +180,6 @@ export function Footer() {
           </div>
         </div>
       </motion.div>
-
-      {/* ── Main link grid ───────────────────────────────── */}
       <div className="mx-auto max-w-375 px-4 pt-14 pb-10 sm:px-6 lg:px-8">
         <motion.div
           className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-5"
@@ -235,8 +225,6 @@ export function Footer() {
           ))}
         </motion.div>
       </div>
-
-      {/* ── Newsletter strip ─────────────────────────────── */}
       <motion.div
         className="mx-auto max-w-375 px-4 sm:px-6 lg:px-8"
         initial="hidden"
@@ -257,9 +245,7 @@ export function Footer() {
             <p
               className={cn(
                 'text-[13px] font-semibold',
-                jl
-                  ? 'text-white'
-                  : 'text-neutral-900 dark:text-white'
+                jl ? 'text-white' : 'text-neutral-900 dark:text-white'
               )}
             >
               Stay in the loop
@@ -281,7 +267,7 @@ export function Footer() {
                 type="email"
                 placeholder="you@example.com"
                 className={cn(
-                  'h-10 w-full rounded-lg border pl-3 pr-3 text-[13px] transition-colors outline-none focus:border-[oklch(0.82_0.22_155)] focus:ring-1 focus:ring-[oklch(0.82_0.22_155)] sm:w-60',
+                  'h-10 w-full rounded-lg border pr-3 pl-3 text-[13px] transition-colors outline-none focus:border-[oklch(0.82_0.22_155)] focus:ring-1 focus:ring-[oklch(0.82_0.22_155)] sm:w-60',
                   jl
                     ? 'border-neutral-700 bg-neutral-800 text-white placeholder:text-neutral-500'
                     : 'border-neutral-200 bg-white text-neutral-900 placeholder:text-neutral-400 dark:border-neutral-700 dark:bg-neutral-800 dark:text-white dark:placeholder:text-neutral-500'
@@ -299,7 +285,6 @@ export function Footer() {
         </div>
       </motion.div>
 
-      {/* ── Divider ──────────────────────────────────────── */}
       <div className="mx-auto max-w-375 px-4 py-8 sm:px-6 lg:px-8">
         <div
           className={cn(
@@ -311,7 +296,6 @@ export function Footer() {
         />
       </div>
 
-      {/* ── Bottom bar ───────────────────────────────────── */}
       <motion.div
         className="mx-auto max-w-375 px-4 pb-8 sm:px-6 lg:px-8"
         initial="hidden"
@@ -321,25 +305,11 @@ export function Footer() {
         transition={{ duration: 0.4 }}
       >
         <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          {/* Brand */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-0.5">
-              <div className="flex h-9 w-9 items-center justify-center">
-                <LogoIcon />
-              </div>
-              <p
-                className={cn(
-                  'font-mono text-[15px] leading-none font-bold tracking-tight',
-                  jl ? 'text-white' : 'dark:text-white'
-                )}
-              >
-                Hack
-                <span className="text-[oklch(0.82_0.22_155)]">Hyre</span>
-              </p>
-            </Link>
+            <Logo isJobListing={jl} />
             <p
               className={cn(
-                'hidden max-w-xs text-[12px] leading-relaxed sm:block',
+                'hidden text-[12px] leading-relaxed sm:block',
                 jl
                   ? 'text-neutral-500'
                   : 'text-neutral-400 dark:text-neutral-500'

@@ -32,6 +32,7 @@ import {
   Icon,
   Logo as LogoIcon,
 } from '@hackhyre/ui/icons'
+import { Logo } from '../global/logo'
 
 interface HeaderUser {
   name: string
@@ -51,24 +52,6 @@ const NAV_ITEMS = [
   { label: 'Community', href: '/community', icon: Home },
   { label: 'FAQ', href: '/faq', icon: InfoCircle },
 ] as const
-
-function Logo({ isJobListing }: { isJobListing?: boolean }) {
-  return (
-    <Link href="/" className="flex items-center gap-0.5">
-      <div className="flex h-9 w-9 items-center justify-center">
-        <LogoIcon />
-      </div>
-      <p
-        className={cn(
-          'font-mono text-[15px] leading-none font-bold tracking-tight',
-          isJobListing ? 'text-white' : ''
-        )}
-      >
-        Hack<span className="text-primary">Hyre</span>
-      </p>
-    </Link>
-  )
-}
 
 function NavLink({
   href,
