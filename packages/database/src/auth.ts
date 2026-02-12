@@ -2,7 +2,7 @@ import { db } from "./client";
 import * as schema from "./schema";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { multiSession, username } from "better-auth/plugins";
+import { multiSession, username, emailOTP } from "better-auth/plugins";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -12,7 +12,17 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
   },
-  plugins: [username(), multiSession()],
+  emailVerification: {
+    sendOnSignUp: true,
+    autoSignInAfterVerification: true
+  },
+  plugins: [username(), multiSession(), emailOTP({
+    overrideDefaultEmailVerification: true,
+    async sendVerificationOTP({ email, otp, type, }) { },
+    otpLength: 6,
+    expiresIn: 10 * 60,
+    sendVerificationOnSignUp: true,
+  })],
   user: {
     additionalFields: {
       role: {

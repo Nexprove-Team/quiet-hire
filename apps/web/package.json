@@ -13,11 +13,11 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^3.0.26",
-    "@ai-sdk/react": "^3.0.81",
+    "@ai-sdk/react": "^3.0.83",
     "@hackhyre/db": "workspace:*",
     "@hackhyre/ui": "workspace:*",
     "@hookform/resolvers": "^5.2.2",
-    "ai": "^6.0.79",
+    "ai": "^6.0.81",
     "better-auth": "^1.4.18",
     "lucide-react": "^0.563.0",
     "motion": "^12.34.0",
