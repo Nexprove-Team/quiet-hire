@@ -35,6 +35,9 @@ jobs:
         run: |
           cat >> .env <<EOF
           DATABASE_URL="postgresql://placeholder:placeholder@localhost:5432/placeholder"
+          TRIGGER_SECRET_KEY="placeholder"
+          TRIGGER_PROJECT_ID="placeholder"
+          RESEND_API_KEY="placeholder"
           EOF
           pnpm build
 
