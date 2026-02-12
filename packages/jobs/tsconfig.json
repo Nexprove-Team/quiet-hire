@@ -1,0 +1,11 @@
+{
+  "extends": "@hackhyre/typescript-config/base.json",
+  "include": ["src"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "paths": {
+      "@jobs/*": ["./src/*"]
+    },
+    "jsx": "react-jsx"
+  }
+}
