@@ -12,8 +12,8 @@ export const sendVerificationEmail = schemaTask({
     queue: {
         concurrencyLimit: 10,
     },
-    run: async ({ otp, email }) => {
-        const html = await render(VerificationOTPEmail({ otp, type: 'email-verification' }))
+    run: async ({ otp, email, type }) => {
+        const html = await render(VerificationOTPEmail({ otp, type: type ? type : "email-verification" }))
         const { data, error } = await resend.emails.send({
             headers: {
                 'X-Entity-Ref-ID': nanoid(),

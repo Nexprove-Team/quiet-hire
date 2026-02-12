@@ -248,6 +248,9 @@ importers:
       '@t3-oss/env-core':
         specifier: ^0.13.10
         version: 0.13.10(typescript@5.9.3)(zod@4.3.6)
+      '@trigger.dev/sdk':
+        specifier: 4.3.3
+        version: 4.3.3(ai@6.0.81(zod@4.3.6))(typescript@5.9.3)(zod@4.3.6)
       bcrypt-ts:
         specifier: ^8.0.1
         version: 8.0.1

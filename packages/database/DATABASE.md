@@ -41,6 +41,7 @@ BETTER_AUTH_URL="http://localhost:3000"
 ```
 
 Generate a secret:
+
 ```bash
 openssl rand -base64 32
 ```
@@ -61,187 +62,198 @@ openssl rand -base64 32
 These 4 tables are **required by Better Auth** and follow its exact schema conventions.
 
 #### `user`
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | text PK | Better Auth generates this |
-| `name` | text | Required on signup |
-| `email` | text (unique) | Login identifier |
-| `email_verified` | boolean | Default `false` |
-| `image` | text | Profile image URL |
-| `role` | enum(`user_role`) | `recruiter` / `candidate` / `admin` — default `candidate` |
-| `created_at` | timestamp | Auto-set |
-| `updated_at` | timestamp | Auto-set |
+
+| Column           | Type              | Notes                                                     |
+| ---------------- | ----------------- | --------------------------------------------------------- |
+| `id`             | text PK           | Better Auth generates this                                |
+| `name`           | text              | Required on signup                                        |
+| `email`          | text (unique)     | Login identifier                                          |
+| `email_verified` | boolean           | Default `false`                                           |
+| `image`          | text              | Profile image URL                                         |
+| `role`           | enum(`user_role`) | `recruiter` / `candidate` / `admin` — default `candidate` |
+| `created_at`     | timestamp         | Auto-set                                                  |
+| `updated_at`     | timestamp         | Auto-set                                                  |
 
 #### `session`
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | text PK | |
-| `expires_at` | timestamp | Session expiry |
-| `token` | text (unique) | Session token |
-| `ip_address` | text | Client IP |
-| `user_agent` | text | Browser/client |
-| `user_id` | text FK→user | Cascade delete |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+
+| Column       | Type          | Notes          |
+| ------------ | ------------- | -------------- |
+| `id`         | text PK       |                |
+| `expires_at` | timestamp     | Session expiry |
+| `token`      | text (unique) | Session token  |
+| `ip_address` | text          | Client IP      |
+| `user_agent` | text          | Browser/client |
+| `user_id`    | text FK→user  | Cascade delete |
+| `created_at` | timestamp     |                |
+| `updated_at` | timestamp     |                |
 
 #### `account`
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | text PK | |
-| `account_id` | text | Provider-specific ID |
-| `provider_id` | text | `credential`, `google`, etc. |
-| `user_id` | text FK→user | Cascade delete |
-| `access_token` | text | OAuth token |
-| `refresh_token` | text | OAuth refresh |
-| `id_token` | text | OIDC ID token |
-| `access_token_expires_at` | timestamp | |
-| `refresh_token_expires_at` | timestamp | |
-| `scope` | text | OAuth scopes |
-| `password` | text | Hashed password (email/password auth) |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+
+| Column                     | Type         | Notes                                 |
+| -------------------------- | ------------ | ------------------------------------- |
+| `id`                       | text PK      |                                       |
+| `account_id`               | text         | Provider-specific ID                  |
+| `provider_id`              | text         | `credential`, `google`, etc.          |
+| `user_id`                  | text FK→user | Cascade delete                        |
+| `access_token`             | text         | OAuth token                           |
+| `refresh_token`            | text         | OAuth refresh                         |
+| `id_token`                 | text         | OIDC ID token                         |
+| `access_token_expires_at`  | timestamp    |                                       |
+| `refresh_token_expires_at` | timestamp    |                                       |
+| `scope`                    | text         | OAuth scopes                          |
+| `password`                 | text         | Hashed password (email/password auth) |
+| `created_at`               | timestamp    |                                       |
+| `updated_at`               | timestamp    |                                       |
 
 #### `verification`
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | text PK | |
-| `identifier` | text | Email or phone |
-| `value` | text | Token/code |
-| `expires_at` | timestamp | Token expiry |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+
+| Column       | Type      | Notes          |
+| ------------ | --------- | -------------- |
+| `id`         | text PK   |                |
+| `identifier` | text      | Email or phone |
+| `value`      | text      | Token/code     |
+| `expires_at` | timestamp | Token expiry   |
+| `created_at` | timestamp |                |
+| `updated_at` | timestamp |                |
 
 ### Domain Tables
 
 #### `companies`
+
 Stores company/organization info linked to recruiter accounts.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | Auto-generated |
-| `name` | text | Company name |
-| `website` | text | Nullable |
-| `logo_url` | text | Nullable |
-| `description` | text | Nullable |
-| `created_by` | text FK→user | Recruiter who created |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| Column        | Type         | Notes                 |
+| ------------- | ------------ | --------------------- |
+| `id`          | uuid PK      | Auto-generated        |
+| `name`        | text         | Company name          |
+| `website`     | text         | Nullable              |
+| `logo_url`    | text         | Nullable              |
+| `description` | text         | Nullable              |
+| `created_by`  | text FK→user | Recruiter who created |
+| `created_at`  | timestamp    |                       |
+| `updated_at`  | timestamp    |                       |
 
 #### `jobs`
+
 Core table for job listings with HackHyre's transparency indicators.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `title` | text | Job title |
-| `slug` | text (unique) | URL-friendly slug for public pages |
-| `description` | text | Full job description (may be AI-generated) |
-| `company_id` | uuid FK→companies | Nullable |
-| `recruiter_id` | text FK→user | Job owner |
-| `status` | enum(`job_status`) | `draft` / `open` / `paused` / `filled` |
-| `employment_type` | enum | `full_time` / `part_time` / `contract` / `internship` |
-| `experience_level` | enum | `entry` / `mid` / `senior` / `lead` / `executive` |
-| `location` | text | Nullable |
-| `is_remote` | boolean | Default `false` |
-| `salary_min` | integer | Nullable |
-| `salary_max` | integer | Nullable |
-| `salary_currency` | text | Default `USD` |
-| `skills` | jsonb | Array of skill strings `["React", "Node.js"]` |
-| `first_published_at` | timestamp | When first made public (transparency) |
-| `is_first_source` | boolean | Whether HackHyre was the first to publish |
-| `source` | text | `hackhyre` / `imported` / `admin` |
-| `source_url` | text | Original URL for imported jobs |
-| `shortlist_limit` | integer | Max candidates shown to recruiter (default 10) |
-| `show_linkedin` | boolean | Show recruiter's LinkedIn |
-| `show_twitter` | boolean | Show recruiter's Twitter/X |
-| `allow_direct_outreach` | boolean | Allow candidates to contact directly |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| Column                  | Type               | Notes                                                 |
+| ----------------------- | ------------------ | ----------------------------------------------------- |
+| `id`                    | uuid PK            |                                                       |
+| `title`                 | text               | Job title                                             |
+| `slug`                  | text (unique)      | URL-friendly slug for public pages                    |
+| `description`           | text               | Full job description (may be AI-generated)            |
+| `company_id`            | uuid FK→companies  | Nullable                                              |
+| `recruiter_id`          | text FK→user       | Job owner                                             |
+| `status`                | enum(`job_status`) | `draft` / `open` / `paused` / `filled`                |
+| `employment_type`       | enum               | `full_time` / `part_time` / `contract` / `internship` |
+| `experience_level`      | enum               | `entry` / `mid` / `senior` / `lead` / `executive`     |
+| `location`              | text               | Nullable                                              |
+| `is_remote`             | boolean            | Default `false`                                       |
+| `salary_min`            | integer            | Nullable                                              |
+| `salary_max`            | integer            | Nullable                                              |
+| `salary_currency`       | text               | Default `USD`                                         |
+| `skills`                | jsonb              | Array of skill strings `["React", "Node.js"]`         |
+| `first_published_at`    | timestamp          | When first made public (transparency)                 |
+| `is_first_source`       | boolean            | Whether HackHyre was the first to publish             |
+| `source`                | text               | `hackhyre` / `imported` / `admin`                     |
+| `source_url`            | text               | Original URL for imported jobs                        |
+| `shortlist_limit`       | integer            | Max candidates shown to recruiter (default 10)        |
+| `show_linkedin`         | boolean            | Show recruiter's LinkedIn                             |
+| `show_twitter`          | boolean            | Show recruiter's Twitter/X                            |
+| `allow_direct_outreach` | boolean            | Allow candidates to contact directly                  |
+| `created_at`            | timestamp          |                                                       |
+| `updated_at`            | timestamp          |                                                       |
 
 #### `applications`
+
 Candidate applications with AI relevance scoring.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `job_id` | uuid FK→jobs | Cascade delete |
-| `candidate_id` | text FK→user | Nullable (guest applications) |
-| `candidate_email` | text | Always stored for contact |
-| `candidate_name` | text | |
-| `resume_url` | text | Uploaded resume |
-| `cover_letter` | text | Optional |
-| `status` | enum(`application_status`) | `pending` → `reviewing` → `shortlisted` → `interviewing` → `hired` / `rejected` |
-| `relevance_score` | real (float) | AI-computed 0.0–1.0 |
-| `relevance_feedback` | text | Why relevant or not |
-| `is_relevant` | boolean | Pass/fail from instant check |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| Column               | Type                       | Notes                                                                           |
+| -------------------- | -------------------------- | ------------------------------------------------------------------------------- |
+| `id`                 | uuid PK                    |                                                                                 |
+| `job_id`             | uuid FK→jobs               | Cascade delete                                                                  |
+| `candidate_id`       | text FK→user               | Nullable (guest applications)                                                   |
+| `candidate_email`    | text                       | Always stored for contact                                                       |
+| `candidate_name`     | text                       |                                                                                 |
+| `resume_url`         | text                       | Uploaded resume                                                                 |
+| `cover_letter`       | text                       | Optional                                                                        |
+| `status`             | enum(`application_status`) | `pending` → `reviewing` → `shortlisted` → `interviewing` → `hired` / `rejected` |
+| `relevance_score`    | real (float)               | AI-computed 0.0–1.0                                                             |
+| `relevance_feedback` | text                       | Why relevant or not                                                             |
+| `is_relevant`        | boolean                    | Pass/fail from instant check                                                    |
+| `created_at`         | timestamp                  |                                                                                 |
+| `updated_at`         | timestamp                  |                                                                                 |
 
 #### `candidate_profiles`
+
 Extended candidate info (one per user).
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `user_id` | text FK→user (unique) | One profile per user |
-| `headline` | text | e.g., "Senior Frontend Engineer" |
-| `bio` | text | |
-| `resume_url` | text | |
-| `portfolio_url` | text | |
-| `linkedin_url` | text | |
-| `twitter_url` | text | |
-| `github_url` | text | |
-| `skills` | jsonb | `["TypeScript", "React"]` |
-| `experience_years` | integer | |
-| `location` | text | |
-| `is_open_to_work` | boolean | Default `true` |
-| `created_at` | timestamp | |
-| `updated_at` | timestamp | |
+| Column             | Type                  | Notes                            |
+| ------------------ | --------------------- | -------------------------------- |
+| `id`               | uuid PK               |                                  |
+| `user_id`          | text FK→user (unique) | One profile per user             |
+| `headline`         | text                  | e.g., "Senior Frontend Engineer" |
+| `bio`              | text                  |                                  |
+| `resume_url`       | text                  |                                  |
+| `portfolio_url`    | text                  |                                  |
+| `linkedin_url`     | text                  |                                  |
+| `twitter_url`      | text                  |                                  |
+| `github_url`       | text                  |                                  |
+| `skills`           | jsonb                 | `["TypeScript", "React"]`        |
+| `experience_years` | integer               |                                  |
+| `location`         | text                  |                                  |
+| `is_open_to_work`  | boolean               | Default `true`                   |
+| `created_at`       | timestamp             |                                  |
+| `updated_at`       | timestamp             |                                  |
 
 #### `talent_pool`
+
 Consent-based candidate storage for rejected applicants who opt in.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `candidate_email` | text | |
-| `candidate_name` | text | |
-| `candidate_id` | text FK→user | Nullable |
-| `resume_url` | text | |
-| `skills` | jsonb | |
-| `consent_given` | boolean | GDPR compliance |
-| `consent_given_at` | timestamp | When consent was recorded |
-| `source_job_id` | uuid FK→jobs | Which job led to opt-in |
-| `created_at` | timestamp | |
+| Column             | Type         | Notes                     |
+| ------------------ | ------------ | ------------------------- |
+| `id`               | uuid PK      |                           |
+| `candidate_email`  | text         |                           |
+| `candidate_name`   | text         |                           |
+| `candidate_id`     | text FK→user | Nullable                  |
+| `resume_url`       | text         |                           |
+| `skills`           | jsonb        |                           |
+| `consent_given`    | boolean      | GDPR compliance           |
+| `consent_given_at` | timestamp    | When consent was recorded |
+| `source_job_id`    | uuid FK→jobs | Which job led to opt-in   |
+| `created_at`       | timestamp    |                           |
 
 #### `interview_availability`
+
 Recruiter's available time slots per job.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `job_id` | uuid FK→jobs | Cascade delete |
-| `recruiter_id` | text FK→user | Cascade delete |
-| `day_of_week` | integer | 0=Sunday, 6=Saturday |
-| `start_time` | time | e.g., `09:00` |
-| `end_time` | time | e.g., `17:00` |
-| `timezone` | text | Default `Africa/Lagos` |
-| `is_active` | boolean | Default `true` |
-| `created_at` | timestamp | |
+| Column         | Type         | Notes                  |
+| -------------- | ------------ | ---------------------- |
+| `id`           | uuid PK      |                        |
+| `job_id`       | uuid FK→jobs | Cascade delete         |
+| `recruiter_id` | text FK→user | Cascade delete         |
+| `day_of_week`  | integer      | 0=Sunday, 6=Saturday   |
+| `start_time`   | time         | e.g., `09:00`          |
+| `end_time`     | time         | e.g., `17:00`          |
+| `timezone`     | text         | Default `Africa/Lagos` |
+| `is_active`    | boolean      | Default `true`         |
+| `created_at`   | timestamp    |                        |
 
 #### `job_distributions`
+
 Tracks where each job has been distributed.
 
-| Column | Type | Notes |
-|--------|------|-------|
-| `id` | uuid PK | |
-| `job_id` | uuid FK→jobs | Cascade delete |
-| `channel` | enum(`distribution_channel`) | `hackhyre` / `linkedin` / `twitter` / `company_page` / `other` |
-| `external_url` | text | Link to external posting |
-| `posted_at` | timestamp | When distributed |
-| `posted_by` | text FK→user | Who posted |
-| `status` | enum(`distribution_status`) | `active` / `removed` |
-| `created_at` | timestamp | |
+| Column         | Type                         | Notes                                                          |
+| -------------- | ---------------------------- | -------------------------------------------------------------- |
+| `id`           | uuid PK                      |                                                                |
+| `job_id`       | uuid FK→jobs                 | Cascade delete                                                 |
+| `channel`      | enum(`distribution_channel`) | `hackhyre` / `linkedin` / `twitter` / `company_page` / `other` |
+| `external_url` | text                         | Link to external posting                                       |
+| `posted_at`    | timestamp                    | When distributed                                               |
+| `posted_by`    | text FK→user                 | Who posted                                                     |
+| `status`       | enum(`distribution_status`)  | `active` / `removed`                                           |
+| `created_at`   | timestamp                    |                                                                |
 
 ---
 
@@ -325,6 +337,7 @@ import { eq, desc } from "drizzle-orm";
 ### Query examples
 
 **Get all open jobs:**
+
 ```typescript
 const openJobs = await db
   .select()
@@ -334,6 +347,7 @@ const openJobs = await db
 ```
 
 **Get a job by slug (for public page):**
+
 ```typescript
 const [job] = await db
   .select()
@@ -343,6 +357,7 @@ const [job] = await db
 ```
 
 **Create a new application:**
+
 ```typescript
 await db.insert(applications).values({
   jobId: "some-job-uuid",
@@ -356,6 +371,7 @@ await db.insert(applications).values({
 ```
 
 **Get transparency stats for a job:**
+
 ```typescript
 import { count, eq, and } from "drizzle-orm";
 
@@ -370,24 +386,19 @@ const [reviewing] = await db
   .select({ count: count() })
   .from(applications)
   .where(
-    and(
-      eq(applications.jobId, jobId),
-      eq(applications.status, "reviewing")
-    )
+    and(eq(applications.jobId, jobId), eq(applications.status, "reviewing")),
   );
 
 const [interviewing] = await db
   .select({ count: count() })
   .from(applications)
   .where(
-    and(
-      eq(applications.jobId, jobId),
-      eq(applications.status, "interviewing")
-    )
+    and(eq(applications.jobId, jobId), eq(applications.status, "interviewing")),
   );
 ```
 
 **Add a candidate to the talent pool (after rejection opt-in):**
+
 ```typescript
 await db.insert(talentPool).values({
   candidateEmail: "john@example.com",
@@ -439,26 +450,26 @@ await authClient.signUp.email({
 
 ## Enums Reference
 
-| Enum Name | Values |
-|-----------|--------|
-| `user_role` | `recruiter`, `candidate`, `admin` |
-| `job_status` | `draft`, `open`, `paused`, `filled` |
-| `employment_type` | `full_time`, `part_time`, `contract`, `internship` |
-| `experience_level` | `entry`, `mid`, `senior`, `lead`, `executive` |
-| `application_status` | `pending`, `reviewing`, `shortlisted`, `interviewing`, `rejected`, `hired` |
-| `distribution_channel` | `hackhyre`, `linkedin`, `twitter`, `company_page`, `other` |
-| `distribution_status` | `active`, `removed` |
+| Enum Name              | Values                                                                     |
+| ---------------------- | -------------------------------------------------------------------------- |
+| `user_role`            | `recruiter`, `candidate`, `admin`                                          |
+| `job_status`           | `draft`, `open`, `paused`, `filled`                                        |
+| `employment_type`      | `full_time`, `part_time`, `contract`, `internship`                         |
+| `experience_level`     | `entry`, `mid`, `senior`, `lead`, `executive`                              |
+| `application_status`   | `pending`, `reviewing`, `shortlisted`, `interviewing`, `rejected`, `hired` |
+| `distribution_channel` | `hackhyre`, `linkedin`, `twitter`, `company_page`, `other`                 |
+| `distribution_status`  | `active`, `removed`                                                        |
 
 ---
 
 ## Package Exports
 
-| Import Path | What You Get |
-|-------------|-------------|
-| `@hackhyre/db` | `db` client, `env`, all tables & enums |
-| `@hackhyre/db/schema` | All tables & enums only |
-| `@hackhyre/db/auth` | Better Auth `auth` instance + `Session`/`User` types |
-| `@hackhyre/db/client` | `db` client only |
+| Import Path           | What You Get                                         |
+| --------------------- | ---------------------------------------------------- |
+| `@hackhyre/db`        | `db` client, `env`, all tables & enums               |
+| `@hackhyre/db/schema` | All tables & enums only                              |
+| `@hackhyre/db/auth`   | Better Auth `auth` instance + `Session`/`User` types |
+| `@hackhyre/db/client` | `db` client only                                     |
 
 ---
 

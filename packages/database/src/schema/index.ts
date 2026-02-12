@@ -1,11 +1,5 @@
 // Auth (Better Auth)
-export {
-  userRoleEnum,
-  user,
-  session,
-  account,
-  verification,
-} from "./auth";
+export { userRoleEnum, user, session, account, verification } from "./auth";
 
 // Companies
 export { companies } from "./companies";

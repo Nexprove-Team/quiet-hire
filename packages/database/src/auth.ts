@@ -1,6 +1,7 @@
 import { db } from "./client";
 import * as schema from "./schema";
 import { betterAuth } from "better-auth";
+import { tasks } from "@trigger.dev/sdk";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { multiSession, username, emailOTP } from "better-auth/plugins";
 
@@ -14,15 +15,27 @@ export const auth = betterAuth({
   },
   emailVerification: {
     sendOnSignUp: true,
-    autoSignInAfterVerification: true
+    autoSignInAfterVerification: true,
   },
-  plugins: [username(), multiSession(), emailOTP({
-    overrideDefaultEmailVerification: true,
-    async sendVerificationOTP({ email, otp, type, }) { },
-    otpLength: 6,
-    expiresIn: 10 * 60,
-    sendVerificationOnSignUp: true,
-  })],
+  plugins: [
+    username(),
+    multiSession(),
+    emailOTP({
+      overrideDefaultEmailVerification: true,
+      async sendVerificationOTP({ email, otp, type }) {
+        if (type === "email-verification") {
+          void tasks.trigger("send-verification-email", {
+            email,
+            otp,
+            type,
+          });
+        }
+      },
+      otpLength: 6,
+      expiresIn: 10 * 60,
+      sendVerificationOnSignUp: true,
+    }),
+  ],
   user: {
     additionalFields: {
       role: {
@@ -53,7 +66,7 @@ export const auth = betterAuth({
     database: {
       generateId: () => crypto.randomUUID(),
     },
-  }
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;

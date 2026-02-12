@@ -86,7 +86,9 @@ export const jobs = pgTable("jobs", {
   shortlistLimit: integer("shortlist_limit").notNull().default(10),
   showLinkedin: boolean("show_linkedin").notNull().default(false),
   showTwitter: boolean("show_twitter").notNull().default(false),
-  allowDirectOutreach: boolean("allow_direct_outreach").notNull().default(false),
+  allowDirectOutreach: boolean("allow_direct_outreach")
+    .notNull()
+    .default(false),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
