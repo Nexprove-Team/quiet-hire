@@ -89,7 +89,7 @@ export function ResumeUploadMode({ onBack }: ResumeUploadModeProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3 }}
-      className="space-y-6"
+      className="flex h-full flex-col justify-center space-y-6 p-6 lg:p-10"
     >
       {/* Header */}
       <div className="flex items-center gap-3">

@@ -33,17 +33,8 @@ import {
   Logo as LogoIcon,
 } from '@hackhyre/ui/icons'
 import { Logo } from '../global/logo'
-
-interface HeaderUser {
-  name: string
-  email: string
-  image?: string | null
-  location?: string | null
-}
-
-interface HeaderProps {
-  user?: HeaderUser | null
-}
+import { User } from '@hackhyre/db/auth'
+import type { Geo } from '@vercel/functions'
 
 const NAV_ITEMS = [
   { label: 'Find Jobs', href: '/jobs-listing', icon: Briefcase },
@@ -127,9 +118,11 @@ function MobileNavLink({
 function AuthenticatedActions({
   user,
   isJoblisting,
+  locationLabel,
 }: {
-  user: HeaderUser
+  user: User
   isJoblisting?: boolean
+  locationLabel?: string
 }) {
   const initials = user.name
     .split(' ')
@@ -139,12 +132,12 @@ function AuthenticatedActions({
 
   return (
     <div className="flex items-center gap-1">
-      <div className="text-muted-foreground mr-2 hidden items-center gap-1.5 xl:flex">
-        <Location size={16} variant="Outline" className="text-primary" />
-        <span className="text-[13px] font-medium">
-          {user.location || 'New York, NY'}
-        </span>
-      </div>
+      {locationLabel && (
+        <div className="text-muted-foreground mr-2 hidden items-center gap-1.5 xl:flex">
+          <Location size={16} variant="Outline" className="text-primary" />
+          <span className="text-[13px] font-medium">{locationLabel}</span>
+        </div>
+      )}
 
       <Separator
         orientation="vertical"
@@ -218,9 +211,13 @@ function UnauthenticatedActions() {
   )
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user, geo }: { user?: User; geo?: Geo }) {
   const pathname = usePathname()
   const [mobileOpen, setMobileOpen] = useState(false)
+
+  const locationLabel = geo?.city
+    ? `${geo.city}${geo.region ? `, ${geo.region}` : ''}`
+    : undefined
 
   const isJobListingPage = pathname.includes('/jobs-listing')
 
@@ -254,6 +251,7 @@ export function Header({ user }: HeaderProps) {
               <AuthenticatedActions
                 user={user}
                 isJoblisting={isJobListingPage}
+                locationLabel={locationLabel}
               />
             ) : (
               <UnauthenticatedActions />
@@ -329,16 +327,16 @@ export function Header({ user }: HeaderProps) {
                       </div>
                     </div>
 
-                    <div className="text-muted-foreground flex items-center gap-2 px-1">
-                      <Location
-                        size={14}
-                        variant="Bold"
-                        className="text-primary"
-                      />
-                      <span className="text-[12px]">
-                        {user.location || 'New York, NY'}
-                      </span>
-                    </div>
+                    {locationLabel && (
+                      <div className="text-muted-foreground flex items-center gap-2 px-1">
+                        <Location
+                          size={14}
+                          variant="Bold"
+                          className="text-primary"
+                        />
+                        <span className="text-[12px]">{locationLabel}</span>
+                      </div>
+                    )}
 
                     <div className="flex gap-2">
                       <SheetClose asChild>

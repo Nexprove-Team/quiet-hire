@@ -5,12 +5,20 @@ import { useChat } from '@ai-sdk/react'
 import { DefaultChatTransport } from 'ai'
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
-import { ArrowLeft, Send } from '@hackhyre/ui/icons'
+import { ArrowLeft } from '@hackhyre/ui/icons'
 import { Loader2 } from 'lucide-react'
-import { Button } from '@hackhyre/ui/components/button'
-import { Input } from '@hackhyre/ui/components/input'
 import { clearOnboardingCookie } from '@/actions/onboarding'
-import { OnboardingChatBubble } from './onboarding-chat-bubble'
+import {
+  Message,
+  MessageContent,
+  MessageResponse,
+} from '@hackhyre/ui/components/ai-elements/message'
+import {
+  PromptInput,
+  PromptInputTextarea,
+  PromptInputSubmit,
+  PromptInputFooter,
+} from '@hackhyre/ui/components/ai-elements/prompt-input'
 
 interface AiChatModeProps {
   userName: string
@@ -29,7 +37,6 @@ function getTextFromParts(
 export function AiChatMode({ userName, onBack }: AiChatModeProps) {
   const router = useRouter()
   const scrollRef = useRef<HTMLDivElement>(null)
-  const [inputValue, setInputValue] = useState('')
 
   const { messages, sendMessage, status } = useChat({
     transport: new DefaultChatTransport({
@@ -38,7 +45,7 @@ export function AiChatMode({ userName, onBack }: AiChatModeProps) {
     onToolCall({ toolCall }) {
       if (toolCall.toolName === 'markOnboardingComplete') {
         clearOnboardingCookie().then(() => {
-          router.push('/')
+          router.push('/dashboard')
         })
       }
     },
@@ -52,7 +59,6 @@ export function AiChatMode({ userName, onBack }: AiChatModeProps) {
     }
   }, [messages])
 
-  // Send an initial greeting once on mount
   const didInit = useRef(false)
   useEffect(() => {
     if (didInit.current) return
@@ -70,27 +76,19 @@ export function AiChatMode({ userName, onBack }: AiChatModeProps) {
     return text.length > 0
   })
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!inputValue.trim() || isLoading) return
-    sendMessage({ text: inputValue })
-    setInputValue('')
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3 }}
-      className="flex h-130 flex-col"
+      className="flex h-full flex-col"
     >
-      {/* Header */}
       <div className="flex items-center gap-3 pb-4">
         <button
           type="button"
           onClick={onBack}
-          className="text-muted-foreground hover:text-foreground flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
+          className="text-muted-foreground hover:text-foreground hover:bg-muted/50 flex h-9 w-9 items-center justify-center rounded-xl transition-colors"
         >
           <ArrowLeft size={18} variant="Linear" />
         </button>
@@ -104,46 +102,65 @@ export function AiChatMode({ userName, onBack }: AiChatModeProps) {
         </div>
       </div>
 
-      {/* Messages */}
-      <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto pr-1">
-        {visibleMessages.map((message) => (
-          <OnboardingChatBubble
-            key={message.id}
-            role={message.role as 'user' | 'assistant'}
-            content={getTextFromParts(
+      <div
+        ref={scrollRef}
+        className="flex-1 space-y-6 overflow-y-auto px-1 pr-2"
+      >
+        <motion.div className="flex flex-col gap-6">
+          {visibleMessages.map((message) => {
+            const content = getTextFromParts(
               message.parts as Array<{ type: string; text?: string }>
+            )
+            return (
+              <motion.div
+                key={message.id}
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                <Message from={message.role as 'user' | 'assistant'}>
+                  <MessageContent>
+                    <MessageResponse>{content}</MessageResponse>
+                  </MessageContent>
+                </Message>
+              </motion.div>
+            )
+          })}
+          {isLoading &&
+            visibleMessages[visibleMessages.length - 1]?.role === 'user' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              >
+                <Message from="assistant">
+                  <MessageContent className="flex flex-row items-center gap-2">
+                    <Loader2 className="text-muted-foreground size-3.5 animate-spin" />
+                    <span className="text-muted-foreground">
+                      Hyre is thinking...
+                    </span>
+                  </MessageContent>
+                </Message>
+              </motion.div>
             )}
-          />
-        ))}
-        {isLoading &&
-          visibleMessages[visibleMessages.length - 1]?.role === 'user' && (
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Hyre is thinking...
-            </div>
-          )}
+        </motion.div>
       </div>
 
-      {/* Input */}
-      <form
-        onSubmit={handleSubmit}
-        className="mt-4 flex items-center gap-2 border-t pt-4"
-      >
-        <Input
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
-          placeholder="Type your message..."
-          disabled={isLoading}
-          className="flex-1"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={isLoading || !inputValue.trim()}
+      <div className="pt-4">
+        <PromptInput
+          onSubmit={({ text }) => {
+            if (!text.trim()) return
+            sendMessage({ text })
+          }}
+          className="border-t-0"
         >
-          <Send size={18} variant="Bold" />
-        </Button>
-      </form>
+          <PromptInputTextarea placeholder="Type your message..." />
+          <PromptInputFooter>
+            <div />
+            <PromptInputSubmit status={status} />
+          </PromptInputFooter>
+        </PromptInput>
+      </div>
     </motion.div>
   )
 }

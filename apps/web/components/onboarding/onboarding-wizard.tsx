@@ -111,7 +111,7 @@ export function OnboardingWizard({ user, onBack }: OnboardingWizardProps) {
   const currentSteps = recruiterSteps
 
   return (
-    <div className="space-y-8">
+    <div className="flex h-full flex-col overflow-y-auto p-6 space-y-8 lg:p-10">
       <StepIndicator steps={steps} currentStep={currentStep} />
 
       <AnimatePresence mode="wait" custom={direction}>

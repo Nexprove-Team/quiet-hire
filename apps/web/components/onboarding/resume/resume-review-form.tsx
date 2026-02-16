@@ -79,6 +79,7 @@ export function ResumeReviewForm({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      className="flex h-full flex-col overflow-y-auto p-6 lg:p-10"
     >
       <div className="space-y-2 pb-6">
         <h2 className="font-mono text-2xl font-bold tracking-tight">

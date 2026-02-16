@@ -37,7 +37,8 @@ export function MethodPicker({ onSelect }: MethodPickerProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
       transition={{ duration: 0.3 }}
-      className="space-y-8"
+      transition={{ duration: 0.3 }}
+      className="flex h-full flex-col justify-center space-y-8 p-6 lg:p-10"
     >
       <div className="space-y-2">
         <h1 className="font-mono text-3xl font-bold tracking-tight">
