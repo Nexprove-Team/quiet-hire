@@ -26,6 +26,7 @@ export const user = pgTable("user", {
   companyName: text("company_name"),
   linkedinUrl: text("linkedin_url"),
   twitterUrl: text("twitter_url"),
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
 
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

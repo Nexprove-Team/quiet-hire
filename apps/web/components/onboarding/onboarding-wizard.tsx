@@ -4,12 +4,6 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { StepIndicator } from './step-indicator'
 
-// Talent steps
-import { TalentStepProfile } from './talent/step-profile'
-import { TalentStepSkills } from './talent/step-skills'
-import { TalentStepPreferences } from './talent/step-preferences'
-import { TalentStepComplete } from './talent/step-complete'
-
 // Recruiter steps
 import { RecruiterStepCompany } from './recruiter/step-company'
 import { RecruiterStepDetails } from './recruiter/step-details'
@@ -67,7 +61,6 @@ export interface StepProps {
   onBack: () => void
 }
 
-const TALENT_STEPS = ['Profile', 'Skills', 'Preferences', 'Done']
 const RECRUITER_STEPS = ['Company', 'Details', 'First Job', 'Done']
 
 interface OnboardingWizardProps {
@@ -80,7 +73,7 @@ export function OnboardingWizard({ user, onBack }: OnboardingWizardProps) {
   const [data, setData] = useState<OnboardingData>({})
   const [direction, setDirection] = useState(1)
 
-  const steps = user.role === 'candidate' ? TALENT_STEPS : RECRUITER_STEPS
+  const steps = RECRUITER_STEPS
 
   const handleUpdate = useCallback((updates: Partial<OnboardingData>) => {
     setData((prev) => ({ ...prev, ...updates }))
@@ -108,13 +101,6 @@ export function OnboardingWizard({ user, onBack }: OnboardingWizardProps) {
     onBack: handleBack,
   }
 
-  const talentSteps = [
-    <TalentStepProfile key="profile" {...stepProps} />,
-    <TalentStepSkills key="skills" {...stepProps} />,
-    <TalentStepPreferences key="preferences" {...stepProps} />,
-    <TalentStepComplete key="complete" {...stepProps} />,
-  ]
-
   const recruiterSteps = [
     <RecruiterStepCompany key="company" {...stepProps} />,
     <RecruiterStepDetails key="details" {...stepProps} />,
@@ -122,7 +108,7 @@ export function OnboardingWizard({ user, onBack }: OnboardingWizardProps) {
     <RecruiterStepComplete key="complete" {...stepProps} />,
   ]
 
-  const currentSteps = user.role === 'candidate' ? talentSteps : recruiterSteps
+  const currentSteps = recruiterSteps
 
   return (
     <div className="space-y-8">

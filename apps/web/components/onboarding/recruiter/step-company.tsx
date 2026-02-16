@@ -124,6 +124,7 @@ export function RecruiterStepCompany({
                     placeholder="What does your company do? What's your mission?"
                     rows={3}
                     {...field}
+                    className="h-37.5 resize-none"
                   />
                 </FormControl>
                 <FormMessage />

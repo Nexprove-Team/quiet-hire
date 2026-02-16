@@ -1,14 +1,55 @@
 'use client'
 
+import { useEffect, useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'motion/react'
 import { TickCircle, ArrowRight } from '@hackhyre/ui/icons'
+import { Loader2 } from 'lucide-react'
 
 import { Button } from '@hackhyre/ui/components/button'
+import { saveRecruiterOnboarding } from '@/actions/onboarding'
 import type { StepProps } from '../onboarding-wizard'
 
 export function RecruiterStepComplete({ data }: StepProps) {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [saved, setSaved] = useState(false)
+  const didSave = useRef(false)
+
+  useEffect(() => {
+    if (didSave.current) return
+    didSave.current = true
+
+    startTransition(async () => {
+      await saveRecruiterOnboarding({
+        companyName: data.companyName ?? 'My Company',
+        companyWebsite: data.companyWebsite,
+        companyLogoUrl: data.companyLogoUrl,
+        companyDescription: data.companyDescription,
+        companyMission: data.companyMission,
+        linkedinUrl: data.companyLinkedinUrl,
+        twitterUrl: data.companyTwitterUrl,
+        jobTitle: data.jobTitle,
+        jobDescription: data.jobDescription,
+        jobEmploymentType: data.jobEmploymentType,
+        jobExperienceLevel: data.jobExperienceLevel,
+        jobLocation: data.jobLocation,
+        jobIsRemote: data.jobIsRemote,
+      })
+      setSaved(true)
+    })
+  }, [data, startTransition])
+
+  if (isPending && !saved) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-16">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
+        <p className="text-muted-foreground text-sm">
+          Setting up your company...
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center space-y-6 py-8 text-center">
@@ -48,7 +89,7 @@ export function RecruiterStepComplete({ data }: StepProps) {
         transition={{ delay: 0.5 }}
         className="flex flex-col gap-3 pt-4"
       >
-        <Button size="lg" onClick={() => router.push('/')}>
+        <Button size="lg" onClick={() => router.push('/recuriter/dashboard')}>
           Go to Dashboard
           <ArrowRight size={18} variant="Linear" className="ml-1" />
         </Button>

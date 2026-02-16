@@ -117,7 +117,7 @@ export function RecruiterStepFirstJob({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                     </FormControl>
@@ -144,7 +144,7 @@ export function RecruiterStepFirstJob({
                     defaultValue={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select level" />
                       </SelectTrigger>
                     </FormControl>
@@ -190,8 +190,8 @@ export function RecruiterStepFirstJob({
                 <FormControl>
                   <Textarea
                     placeholder="Describe the role, responsibilities, and what you're looking for..."
-                    rows={4}
                     {...field}
+                    className="h-25 resize-none"
                   />
                 </FormControl>
                 <FormMessage />

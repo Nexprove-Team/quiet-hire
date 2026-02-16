@@ -11,6 +11,15 @@ export default async function OnboardingPage() {
     redirect('/sign-in')
   }
   const user = session.user as User
+
+  // Redirect already-onboarded users to their dashboard
+  if (user.onboardingCompleted) {
+    if (user.role === 'recruiter') {
+      redirect('/recuriter/dashboard')
+    }
+    redirect('/dashboard')
+  }
+
   const role = user.role === 'recruiter' ? 'recruiter' : 'candidate'
 
   if (role === 'recruiter') {

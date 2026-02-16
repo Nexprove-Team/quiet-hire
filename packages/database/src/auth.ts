@@ -60,6 +60,12 @@ export const auth = betterAuth({
         required: false,
         input: true,
       },
+      onboardingCompleted: {
+        type: "boolean",
+        required: false,
+        defaultValue: false,
+        input: false,
+      },
     },
   },
   advanced: {

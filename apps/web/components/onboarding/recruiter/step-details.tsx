@@ -68,8 +68,8 @@ export function RecruiterStepDetails({
                 <FormControl>
                   <Textarea
                     placeholder="What drives your team? What's it like to work at your company?"
-                    rows={4}
                     {...field}
+                    className="h-25 resize-none"
                   />
                 </FormControl>
                 <FormMessage />

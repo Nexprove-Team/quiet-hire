@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod/v4'
@@ -86,9 +86,9 @@ type FormValues = BaseValues | RecruiterValues
 
 export function SignUpForm() {
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [selectedRole, setSelectedRole] = useState<Role | null>(null)
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
   const isRecruiter = selectedRole === 'recruiter'
 
@@ -111,29 +111,29 @@ export function SignUpForm() {
 
   async function onSubmit(values: FormValues) {
     if (!selectedRole) return
-    setIsLoading(true)
-
-    const { error } = await authClient.signUp.email({
-      email: values.email,
-      password: values.password,
-      name: values.name,
-      username: values.username,
-      role: selectedRole,
-      companyName:
-        isRecruiter && 'companyName' in values ? values.companyName : undefined,
+    startTransition(async () => {
+      const { error } = await authClient.signUp.email({
+        email: values.email,
+        password: values.password,
+        name: values.name,
+        username: values.username,
+        role: selectedRole,
+        companyName:
+          isRecruiter && 'companyName' in values
+            ? values.companyName
+            : undefined,
+      })
+      if (error) {
+        toast.error(error.message ?? 'Something went wrong')
+        return
+      }
+      toast.success(
+        'Account created! Check your email for a verification code.'
+      )
+      router.push(
+        `/verify-email?email=${encodeURIComponent(values.email)}&role=${selectedRole}`
+      )
     })
-
-    setIsLoading(false)
-
-    if (error) {
-      toast.error(error.message ?? 'Something went wrong')
-      return
-    }
-
-    toast.success('Account created! Check your email for a verification code.')
-    router.push(
-      `/verify-email?email=${encodeURIComponent(values.email)}&role=${selectedRole}`
-    )
   }
 
   return (
@@ -314,7 +314,7 @@ export function SignUpForm() {
                           <Input
                             placeholder="Jane Doe"
                             autoComplete="name"
-                            disabled={isLoading}
+                            disabled={isPending}
                             className="pl-10"
                             {...field}
                           />
@@ -342,7 +342,7 @@ export function SignUpForm() {
                             type="email"
                             placeholder="you@example.com"
                             autoComplete="email"
-                            disabled={isLoading}
+                            disabled={isPending}
                             className="pl-10"
                             {...field}
                           />
@@ -369,7 +369,7 @@ export function SignUpForm() {
                           <Input
                             placeholder="janedoe"
                             autoComplete="username"
-                            disabled={isLoading}
+                            disabled={isPending}
                             className="pl-10"
                             {...field}
                           />
@@ -401,7 +401,7 @@ export function SignUpForm() {
                               />
                               <Input
                                 placeholder="Acme Inc."
-                                disabled={isLoading}
+                                disabled={isPending}
                                 className="pl-10"
                                 {...field}
                                 value={field.value ?? ''}
@@ -433,7 +433,7 @@ export function SignUpForm() {
                               type={showPassword ? 'text' : 'password'}
                               placeholder="••••••••"
                               autoComplete="new-password"
-                              disabled={isLoading}
+                              disabled={isPending}
                               className="pr-9 pl-10"
                               {...field}
                             />
@@ -473,7 +473,7 @@ export function SignUpForm() {
                               type={showPassword ? 'text' : 'password'}
                               placeholder="••••••••"
                               autoComplete="new-password"
-                              disabled={isLoading}
+                              disabled={isPending}
                               className="pl-10"
                               {...field}
                             />
@@ -487,10 +487,10 @@ export function SignUpForm() {
 
                 <Button
                   type="submit"
-                  className="!mt-5 w-full"
-                  disabled={isLoading}
+                  className="mt-5! w-full"
+                  disabled={isPending}
                 >
-                  {isLoading ? (
+                  {isPending ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Creating account...
