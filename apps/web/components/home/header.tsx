@@ -118,11 +118,9 @@ function MobileNavLink({
 function AuthenticatedActions({
   user,
   isJoblisting,
-  locationLabel,
 }: {
   user: User
   isJoblisting?: boolean
-  locationLabel?: string
 }) {
   const initials = user.name
     .split(' ')
@@ -132,21 +130,6 @@ function AuthenticatedActions({
 
   return (
     <div className="flex items-center gap-1">
-      {locationLabel && (
-        <div className="text-muted-foreground mr-2 hidden items-center gap-1.5 xl:flex">
-          <Location size={16} variant="Outline" className="text-primary" />
-          <span className="text-[13px] font-medium">{locationLabel}</span>
-        </div>
-      )}
-
-      <Separator
-        orientation="vertical"
-        className={cn(
-          'mx-2 hidden h-5 xl:block',
-          isJoblisting ? 'bg-[oklch(0.26_0.02_270)]' : 'bg-border'
-        )}
-      />
-
       <Link
         href="/dashboard"
         className="ring-primary/20 hover:ring-primary/40 rounded-full ring-2 transition-all"
@@ -246,12 +229,35 @@ export function Header({ user, geo }: { user?: User; geo?: Geo }) {
         </nav>
 
         <div className="flex items-center gap-2">
+          {locationLabel && (
+            <div className="text-muted-foreground mr-2 hidden items-center gap-1.5 xl:flex">
+              <Location size={16} variant="Outline" className="text-primary" />
+              <span
+                className={cn(
+                  'text-[13px] font-medium',
+                  isJobListingPage ? 'text-white/80' : ''
+                )}
+              >
+                {locationLabel}
+              </span>
+            </div>
+          )}
+
+          {locationLabel && (
+            <Separator
+              orientation="vertical"
+              className={cn(
+                'mx-2 hidden h-5 xl:block',
+                isJobListingPage ? 'bg-[oklch(0.26_0.02_270)]' : 'bg-border'
+              )}
+            />
+          )}
+
           <div className="hidden lg:flex">
             {user ? (
               <AuthenticatedActions
                 user={user}
                 isJoblisting={isJobListingPage}
-                locationLabel={locationLabel}
               />
             ) : (
               <UnauthenticatedActions />
@@ -301,6 +307,13 @@ export function Header({ user, geo }: { user?: User; geo?: Geo }) {
 
               <Separator className="mx-4 w-auto" />
 
+              {locationLabel && (
+                <div className="text-muted-foreground flex items-center gap-2 px-5 py-3">
+                  <Location size={14} variant="Bold" className="text-primary" />
+                  <span className="text-[12px]">{locationLabel}</span>
+                </div>
+              )}
+
               <div className="px-4 py-4">
                 {user ? (
                   <div className="space-y-3">
@@ -326,17 +339,6 @@ export function Header({ user, geo }: { user?: User; geo?: Geo }) {
                         </p>
                       </div>
                     </div>
-
-                    {locationLabel && (
-                      <div className="text-muted-foreground flex items-center gap-2 px-1">
-                        <Location
-                          size={14}
-                          variant="Bold"
-                          className="text-primary"
-                        />
-                        <span className="text-[12px]">{locationLabel}</span>
-                      </div>
-                    )}
 
                     <div className="flex gap-2">
                       <SheetClose asChild>
