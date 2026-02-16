@@ -35,7 +35,6 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL('/', request.url))
   }
 
-  // Redirect un-onboarded users to /onboarding (skip if already there)
   if (session && !isOnboarding && isProtected && !session.user.onboardingCompleted) {
     return NextResponse.redirect(new URL('/onboarding', request.url))
   }

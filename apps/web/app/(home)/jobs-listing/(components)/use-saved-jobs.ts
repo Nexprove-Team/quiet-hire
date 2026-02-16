@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { MOCK_JOBS } from './mock-data'
 
 interface SavedJobsState {
   saved: Record<string, boolean>
@@ -8,7 +7,7 @@ interface SavedJobsState {
 }
 
 export const useSavedJobs = create<SavedJobsState>((set, get) => ({
-  saved: Object.fromEntries(MOCK_JOBS.map((j) => [j.id, j.saved])),
+  saved: {},
   toggle: (id) =>
     set((state) => ({
       saved: { ...state.saved, [id]: !state.saved[id] },

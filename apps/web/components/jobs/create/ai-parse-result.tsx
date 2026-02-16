@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { toast } from 'sonner'
 import { motion } from 'motion/react'
 
 import { Button } from '@hackhyre/ui/components/button'
@@ -22,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@hackhyre/ui/components/select'
+import { Spinner } from '@hackhyre/ui/components/spinner'
 import { Edit, TickCircle, ArrowLeft } from '@hackhyre/ui/icons'
 
 import { TagInput } from './tag-input'
@@ -33,17 +33,13 @@ type ParsedJob = typeof MOCK_AI_PARSED_JOB
 interface AiParseResultProps {
   data: ParsedJob
   onBack: () => void
+  onCreateJob: (data: ParsedJob, asDraft: boolean) => Promise<void>
+  isCreating?: boolean
 }
 
-export function AiParseResult({ data, onBack }: AiParseResultProps) {
+export function AiParseResult({ data, onBack, onCreateJob, isCreating }: AiParseResultProps) {
   const [editData, setEditData] = useState(data)
   const [isEditing, setIsEditing] = useState(false)
-
-  function handleCreate() {
-    toast.success('Job created successfully!', {
-      description: `"${editData.title}" has been saved as a draft.`,
-    })
-  }
 
   function update<K extends keyof ParsedJob>(key: K, value: ParsedJob[K]) {
     setEditData((prev) => ({ ...prev, [key]: value }))
@@ -278,12 +274,23 @@ export function AiParseResult({ data, onBack }: AiParseResultProps) {
       </div>
 
       <div className="flex justify-end gap-3">
-        <Button variant="outline" onClick={onBack}>
+        <Button variant="outline" onClick={onBack} disabled={isCreating}>
           Re-analyze
         </Button>
-        <Button onClick={handleCreate}>
-          <TickCircle size={16} variant="Bold" className="mr-1.5" />
-          Create Job
+        <Button
+          variant="outline"
+          disabled={isCreating}
+          onClick={() => onCreateJob(editData, true)}
+        >
+          Save as Draft
+        </Button>
+        <Button disabled={isCreating} onClick={() => onCreateJob(editData, false)}>
+          {isCreating ? (
+            <Spinner className="mr-1.5 h-4 w-4" />
+          ) : (
+            <TickCircle size={16} variant="Bold" className="mr-1.5" />
+          )}
+          {isCreating ? 'Creating...' : 'Create Job'}
         </Button>
       </div>
     </motion.div>

@@ -16,7 +16,8 @@ import {
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCompanySheet } from './use-company-sheet'
-import { MOCK_JOBS } from './mock-data'
+import { toDisplayJob } from './mock-data'
+import { useCompanyJobs } from '@/hooks/use-jobs'
 
 // ── Light mode CSS variable overrides ─────────────────────────────────
 
@@ -282,10 +283,9 @@ const SHEET_CLASSES =
 export function CompanySheet() {
   const { isOpen, companyName, close } = useCompanySheet()
 
+  const { data: rawJobs } = useCompanyJobs(companyName ?? '')
+  const companyJobs = (rawJobs ?? []).map((item, i) => toDisplayJob(item, i))
   const company = companyName ? MOCK_COMPANIES[companyName] : null
-  const companyJobs = companyName
-    ? MOCK_JOBS.filter((j) => j.company === companyName)
-    : []
 
   if (!company) {
     return (

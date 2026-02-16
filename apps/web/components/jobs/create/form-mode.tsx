@@ -1,10 +1,13 @@
 'use client'
 
-import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { useRouter } from 'next/navigation'
 import { z } from 'zod/v4'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
+
+import { useCreateJob } from '@/hooks/use-jobs'
+import type { CreateJobInput } from '@/actions/job-mutations'
 
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -62,7 +65,8 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>
 
 export function FormMode() {
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter()
+  const { mutateAsync, isPending: isSubmitting } = useCreateJob()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -84,13 +88,23 @@ export function FormMode() {
 
   const watchedValues = form.watch()
 
-  async function onSubmit(values: FormValues) {
-    setIsSubmitting(true)
-    await new Promise((r) => setTimeout(r, 1500))
-    setIsSubmitting(false)
-    toast.success('Job created successfully!', {
-      description: `"${values.title}" has been saved as a draft.`,
-    })
+  async function onSubmit(values: FormValues, asDraft = false) {
+    try {
+      await mutateAsync({
+        ...values,
+        employmentType: values.employmentType as CreateJobInput['employmentType'],
+        experienceLevel: values.experienceLevel as CreateJobInput['experienceLevel'],
+        status: asDraft ? 'draft' : 'open',
+      })
+      toast.success(asDraft ? 'Draft saved!' : 'Job published!', {
+        description: `"${values.title}" has been ${asDraft ? 'saved as a draft' : 'published'}.`,
+      })
+      router.push('/recuriter/jobs')
+    } catch (error) {
+      toast.error('Failed to create job', {
+        description: error instanceof Error ? error.message : 'Something went wrong',
+      })
+    }
   }
 
   return (
@@ -98,7 +112,7 @@ export function FormMode() {
       {/* Form */}
       <div className="lg:col-span-3">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <form onSubmit={form.handleSubmit((v) => onSubmit(v, false))} className="space-y-5">
             {/* Basic Info */}
             <Card>
               <CardHeader className="pb-3">
@@ -306,7 +320,12 @@ export function FormMode() {
 
             {/* Actions */}
             <div className="flex justify-end gap-3">
-              <Button type="button" variant="outline">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={isSubmitting}
+                onClick={() => form.handleSubmit((v) => onSubmit(v, true))()}
+              >
                 Save as Draft
               </Button>
               <Button type="submit" disabled={isSubmitting}>

@@ -19,83 +19,79 @@ import { FeaturedSidebar } from './(components)/featured-sidebar'
 import { JobCard } from './(components)/job-card'
 import { useJobListingFilter } from './(components)/use-job-listing-filter'
 import { useSavedJobs } from './(components)/use-saved-jobs'
-import { MOCK_JOBS, EXPERIENCE_MAP } from './(components)/mock-data'
+import { toDisplayJob } from './(components)/mock-data'
+import { usePublicJobs } from '@/hooks/use-jobs'
+import type { JobFilters } from '@/actions/jobs'
 
 // ── Main Page ──────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 6
 
 export default function JobsPage() {
-  const [filters] = useJobListingFilter()
+  const [filters, setFilters] = useJobListingFilter()
   const toggleSave = useSavedJobs((s) => s.toggle)
   const saved = useSavedJobs((s) => s.saved)
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
+  const [sort, setSort] = useState<'updated' | 'salary-high' | 'salary-low'>(
+    'updated'
+  )
 
   // Debounce the search query by 300ms
   const [debouncedQuery] = useDebounce(filters.q, 300)
 
+  // Build server-side filter params
+  const serverFilters: JobFilters = useMemo(
+    () => ({
+      q: debouncedQuery || undefined,
+      location:
+        filters.location && filters.location !== 'any'
+          ? filters.location
+          : undefined,
+      experience:
+        filters.experience && filters.experience !== 'any'
+          ? filters.experience
+          : undefined,
+      salaryMin: filters.salary[0] ?? undefined,
+      salaryMax: filters.salary[1] ?? undefined,
+      recruiter: filters.recruiter || undefined,
+      sort,
+    }),
+    [debouncedQuery, filters.location, filters.experience, filters.salary, filters.recruiter, sort]
+  )
+
+  const { data: rawJobs, isLoading } = usePublicJobs(serverFilters)
+
   // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
-  }, [debouncedQuery, filters])
+  }, [serverFilters])
 
-  // ── Filter jobs ────────────────────────────────────────────────────
+  // Map server data to display shape + apply client-side schedule/employment filters
+  const displayJobs = useMemo(() => {
+    if (!rawJobs) return []
 
-  const filteredJobs = useMemo(() => {
-    const query = debouncedQuery.toLowerCase().trim()
-    const salaryMin = filters.salary[0] ?? 0
-    const salaryMax = filters.salary[1] ?? 20000
+    let mapped = rawJobs.map((item, i) => toDisplayJob(item, i))
 
-    return MOCK_JOBS.filter((job) => {
-      // Text search (debounced)
-      if (query) {
-        const searchable =
-          `${job.title} ${job.company} ${job.tags.join(' ')}`.toLowerCase()
-        if (!searchable.includes(query)) return false
-      }
+    // Client-side schedule filter
+    if (filters.schedule.length > 0) {
+      mapped = mapped.filter((job) =>
+        job.workingSchedule.some((s) => filters.schedule.includes(s))
+      )
+    }
 
-      // Recruiter filter (right sidebar)
-      if (filters.recruiter && job.company !== filters.recruiter) return false
+    // Client-side employment type filter
+    if (filters.employment.length > 0) {
+      mapped = mapped.filter((job) =>
+        job.employmentType.some((t) => filters.employment.includes(t))
+      )
+    }
 
-      // Location filter
-      if (filters.location && filters.location !== 'any') {
-        if (job.locationType !== filters.location) return false
-      }
-
-      // Experience filter
-      if (filters.experience && filters.experience !== 'any') {
-        const validLabels = EXPERIENCE_MAP[filters.experience]
-        if (validLabels && !job.tags.some((t) => validLabels.includes(t)))
-          return false
-      }
-
-      // Salary range filter
-      if (job.salaryHourly < salaryMin || job.salaryHourly > salaryMax)
-        return false
-
-      // Working schedule filter (show jobs that match ANY active schedule)
-      if (filters.schedule.length > 0) {
-        const hasMatch = job.workingSchedule.some((s) =>
-          filters.schedule.includes(s)
-        )
-        if (!hasMatch) return false
-      }
-
-      // Employment type filter (show jobs that match ANY active type)
-      if (filters.employment.length > 0) {
-        const hasMatch = job.employmentType.some((t) =>
-          filters.employment.includes(t)
-        )
-        if (!hasMatch) return false
-      }
-
-      return true
-    })
-  }, [debouncedQuery, filters])
+    return mapped
+  }, [rawJobs, filters.schedule, filters.employment])
 
   // Add save state to jobs
-  const jobsWithSaveState = filteredJobs.map((job) => ({
+  const jobsWithSaveState = displayJobs.map((job) => ({
     ...job,
     saved: saved[job.id] ?? job.saved,
   }))
@@ -150,7 +146,12 @@ export default function JobsPage() {
               <span className="hidden text-[13px] text-neutral-500 sm:inline">
                 Sort by:
               </span>
-              <Select defaultValue="updated">
+              <Select
+                value={sort}
+                onValueChange={(v) =>
+                  setSort(v as 'updated' | 'salary-high' | 'salary-low')
+                }
+              >
                 <SelectTrigger className="h-8 w-auto gap-1.5 border-0 bg-white px-2 text-[13px] font-semibold text-neutral-900 shadow-none focus-visible:ring-0 dark:bg-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -185,7 +186,16 @@ export default function JobsPage() {
             </div>
           </div>
 
-          {visibleJobs.length > 0 ? (
+          {isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+                <div
+                  key={i}
+                  className="h-56 animate-pulse rounded-2xl border border-neutral-200 bg-neutral-50"
+                />
+              ))}
+            </div>
+          ) : visibleJobs.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {visibleJobs.map((job) => (
                 <JobCard key={job.id} job={job} onToggleSave={toggleSave} />

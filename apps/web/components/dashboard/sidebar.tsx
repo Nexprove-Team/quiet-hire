@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { TooltipProvider } from '@hackhyre/ui/components/tooltip'
 import { Separator } from '@hackhyre/ui/components/separator'
@@ -13,10 +13,8 @@ import {
   AddCircle,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
-
 import { SidebarNavItem } from './sidebar-nav-item'
 import { useSidebar } from '@/hooks/use-sidebar'
-import { MOCK_USER } from '@/lib/mock-data'
 import Link from 'next/link'
 import {
   SIDEBAR_NAV_ITEMS,
@@ -24,12 +22,21 @@ import {
   SIDEBAR_WIDTH_EXPANDED,
   SIDEBAR_WIDTH_COLLAPSED,
 } from '@/lib/constants'
+import { Session, User } from '@hackhyre/db/auth'
+import { authClient } from '@/lib/auth-client'
 
-function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
+function SidebarContent({
+  isCollapsed,
+  user,
+}: {
+  isCollapsed: boolean
+  user?: User
+}) {
   const pathname = usePathname()
   const toggle = useSidebar((s) => s.toggle)
+  const router = useRouter()
 
-  const initials = MOCK_USER.name
+  const initials = user?.name
     .split(' ')
     .map((n) => n[0])
     .join('')
@@ -37,7 +44,6 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo area */}
       <div
         className={cn(
           'flex h-16 shrink-0 items-center px-5',
@@ -81,7 +87,6 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
         </AnimatePresence>
       </div>
 
-      {/* Quick create — only when expanded */}
       <AnimatePresence>
         {!isCollapsed && (
           <motion.div
@@ -91,7 +96,7 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
             className="overflow-hidden px-4 pb-2"
           >
             <Link
-              href="/jobs/create"
+              href="/recuriter/jobs/create"
               className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 flex items-center gap-2 rounded-xl border border-dashed px-3 py-2 text-[13px] font-medium transition-colors"
             >
               <AddCircle size={18} variant="Bulk" />
@@ -103,7 +108,6 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
 
       <Separator className="mx-4 w-auto" />
 
-      {/* Main nav */}
       <nav
         className={cn(
           'flex-1 space-y-1 overflow-y-auto py-4',
@@ -168,14 +172,12 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
         ))}
       </nav>
 
-      {/* User profile section at bottom */}
       <div
         className={cn(
           'shrink-0 border-t p-3',
           isCollapsed && 'flex flex-col items-center p-2'
         )}
       >
-        {/* User card */}
         <div
           className={cn(
             'flex items-center rounded-xl transition-colors',
@@ -197,11 +199,11 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
                 transition={{ duration: 0.12 }}
                 className="min-w-0 flex-1"
               >
-                <p className="truncate text-[13px] font-semibold">
-                  {MOCK_USER.name}
+                <p className="truncate text-[13px] font-semibold capitalize">
+                  {user?.name}
                 </p>
-                <p className="text-muted-foreground truncate text-[11px]">
-                  {MOCK_USER.companyName}
+                <p className="text-muted-foreground truncate text-[11px] capitalize">
+                  {user?.companyName}
                 </p>
               </motion.div>
             )}
@@ -213,7 +215,15 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => {}}
+                onClick={async () => {
+                  await authClient.signOut({
+                    fetchOptions: {
+                      onSuccess: () => {
+                        router.push('/')
+                      },
+                    },
+                  })
+                }}
                 className="text-muted-foreground hover:text-foreground shrink-0 rounded-lg p-1 transition-colors"
               >
                 <LogoutCurve size={16} variant="Linear" />
@@ -221,8 +231,6 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
             )}
           </AnimatePresence>
         </div>
-
-        {/* Collapse toggle */}
         <button
           onClick={toggle}
           className={cn(
@@ -244,7 +252,7 @@ function SidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
   )
 }
 
-export function Sidebar() {
+export function Sidebar(props: { session: Session | null }) {
   const isCollapsed = useSidebar((s) => s.isCollapsed)
   const isMobileOpen = useSidebar((s) => s.isMobileOpen)
   const closeMobile = useSidebar((s) => s.closeMobile)
@@ -261,11 +269,12 @@ export function Sidebar() {
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
           className="bg-card hidden h-full shrink-0 overflow-hidden border-r lg:block"
         >
-          <SidebarContent isCollapsed={isCollapsed} />
+          <SidebarContent
+            isCollapsed={isCollapsed}
+            user={props.session?.user}
+          />
         </motion.aside>
       </TooltipProvider>
-
-      {/* Mobile sidebar */}
       <Sheet
         open={isMobileOpen}
         onOpenChange={(open) => !open && closeMobile()}
@@ -273,7 +282,7 @@ export function Sidebar() {
         <SheetContent side="left" className="w-70 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <TooltipProvider>
-            <SidebarContent isCollapsed={false} />
+            <SidebarContent isCollapsed={false} user={props.session?.user} />
           </TooltipProvider>
         </SheetContent>
       </Sheet>

@@ -3,7 +3,7 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { Button } from '@hackhyre/ui/components/button'
 import { Badge } from '@hackhyre/ui/components/badge'
 import { Bookmark } from '@hackhyre/ui/icons'
-import type { Job } from './mock-data'
+import type { PublicJob } from './mock-data'
 
 // ── Apple Logo SVG ─────────────────────────────────────────────────────
 
@@ -28,7 +28,7 @@ export function JobCard({
   job,
   onToggleSave,
 }: {
-  job: Job
+  job: PublicJob
   onToggleSave: (id: string) => void
 }) {
   return (
@@ -122,7 +122,7 @@ export function FeaturedJobCard({
   job,
   onToggleSave,
 }: {
-  job: Job
+  job: PublicJob
   onToggleSave: (id: string) => void
 }) {
   return (

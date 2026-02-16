@@ -1,6 +1,8 @@
+import type { PublicJobListItem, TopCompany } from '@/actions/jobs'
+
 // ── Types ──────────────────────────────────────────────────────────────
 
-export interface Job {
+export interface PublicJob {
   id: string
   date: string
   company: string
@@ -9,16 +11,15 @@ export interface Job {
   logoLetter: string
   tags: string[]
   salary: string
-  salaryHourly: number
+  salaryNumeric: number
   location: string
   locationType: 'remote' | 'onsite' | 'hybrid'
-  experienceLevel: 'entry' | 'mid' | 'senior' | 'lead'
+  experienceLevel: string
   workingSchedule: string[]
   employmentType: string[]
   cardColor: string
   dateBadgeColor: string
   saved: boolean
-  featured?: boolean
 }
 
 export interface Recruiter {
@@ -58,290 +59,31 @@ const CARD_STYLES = [
   },
 ]
 
-// ── Mock Jobs ──────────────────────────────────────────────────────────
+// ── Logo color palette (deterministic from name) ──────────────────────
 
-export const MOCK_JOBS: Job[] = [
-  {
-    id: '1',
-    date: '20 May, 2023',
-    company: 'Amazon',
-    title: 'Senior UI/UX Designer',
-    logoColor: 'bg-black',
-    logoLetter: 'a',
-    tags: ['Part time', 'Senior level', 'Distant', 'Project work'],
-    salary: '$250/hr',
-    salaryHourly: 250,
-    location: 'San Francisco, CA',
-    locationType: 'remote',
-    experienceLevel: 'senior',
-    workingSchedule: ['Part time'],
-    employmentType: ['Distant work', 'Flexible schedule'],
-    ...CARD_STYLES[0]!,
-    saved: false,
-  },
-  {
-    id: '2',
-    date: '4 Feb, 2023',
-    company: 'Google',
-    title: 'Junior UI/UX Designer',
-    logoColor: 'bg-blue-500',
-    logoLetter: 'G',
-    tags: [
-      'Full time',
-      'Junior level',
-      'Distant',
-      'Project work',
-      'Flexible Schedule',
-    ],
-    salary: '$150/hr',
-    salaryHourly: 150,
-    location: 'California, CA',
-    locationType: 'hybrid',
-    experienceLevel: 'entry',
-    workingSchedule: ['Full time'],
-    employmentType: ['Distant work', 'Flexible schedule'],
-    ...CARD_STYLES[1]!,
-    saved: true,
-  },
-  {
-    id: '3',
-    date: '29 Jan, 2023',
-    company: 'Dribbble',
-    title: 'Senior Motion Designer',
-    logoColor: 'bg-pink-500',
-    logoLetter: 'D',
-    tags: ['Part time', 'Senior level', 'Full Day', 'Shift work'],
-    salary: '$260/hr',
-    salaryHourly: 260,
-    location: 'New York, NY',
-    locationType: 'onsite',
-    experienceLevel: 'senior',
-    workingSchedule: ['Part time'],
-    employmentType: ['Full day', 'Shift work'],
-    ...CARD_STYLES[2]!,
-    saved: false,
-  },
-  {
-    id: '4',
-    date: '11 Apr, 2023',
-    company: 'Twitter',
-    title: 'UX Designer',
-    logoColor: 'bg-sky-500',
-    logoLetter: 'T',
-    tags: ['Full time', 'Middle level', 'Distant', 'Project work'],
-    salary: '$120/hr',
-    salaryHourly: 120,
-    location: 'California, CA',
-    locationType: 'remote',
-    experienceLevel: 'mid',
-    workingSchedule: ['Full time'],
-    employmentType: ['Distant work'],
-    ...CARD_STYLES[3]!,
-    saved: false,
-  },
-  {
-    id: '5',
-    date: '2 Apr, 2023',
-    company: 'Airbnb',
-    title: 'Graphic Designer',
-    logoColor: 'bg-rose-500',
-    logoLetter: 'A',
-    tags: ['Part time', 'Senior level'],
-    salary: '$300/hr',
-    salaryHourly: 300,
-    location: 'New York, NY',
-    locationType: 'onsite',
-    experienceLevel: 'senior',
-    workingSchedule: ['Part time'],
-    employmentType: ['Full day'],
-    ...CARD_STYLES[4]!,
-    saved: false,
-    featured: true,
-  },
-  {
-    id: '6',
-    date: '18 Jan, 2023',
-    company: 'Apple',
-    title: 'Graphic Designer',
-    logoColor: 'bg-zinc-800',
-    logoLetter: '',
-    tags: ['Part time', 'Distant'],
-    salary: '$140/hr',
-    salaryHourly: 140,
-    location: 'San Francisco, CA',
-    locationType: 'remote',
-    experienceLevel: 'mid',
-    workingSchedule: ['Part time'],
-    employmentType: ['Distant work'],
-    ...CARD_STYLES[5]!,
-    saved: false,
-  },
-  {
-    id: '7',
-    date: '8 Jun, 2023',
-    company: 'Spotify',
-    title: 'Product Designer',
-    logoColor: 'bg-green-600',
-    logoLetter: 'S',
-    tags: ['Full time', 'Senior level', 'Flexible Schedule'],
-    salary: '$220/hr',
-    salaryHourly: 220,
-    location: 'Stockholm, SE',
-    locationType: 'hybrid',
-    experienceLevel: 'senior',
-    workingSchedule: ['Full time'],
-    employmentType: ['Flexible schedule'],
-    ...CARD_STYLES[6]!,
-    saved: false,
-    featured: true,
-  },
-  {
-    id: '8',
-    date: '15 Mar, 2023',
-    company: 'Meta',
-    title: 'Frontend Developer',
-    logoColor: 'bg-blue-600',
-    logoLetter: 'M',
-    tags: ['Full time', 'Senior level', 'Distant', 'Full Day'],
-    salary: '$320/hr',
-    salaryHourly: 320,
-    location: 'Menlo Park, CA',
-    locationType: 'remote',
-    experienceLevel: 'senior',
-    workingSchedule: ['Full time'],
-    employmentType: ['Full day', 'Distant work'],
-    ...CARD_STYLES[7]!,
-    saved: false,
-  },
-  {
-    id: '9',
-    date: '22 May, 2023',
-    company: 'Netflix',
-    title: 'Senior Visual Designer',
-    logoColor: 'bg-red-600',
-    logoLetter: 'N',
-    tags: ['Full time', 'Senior level', 'Full Day'],
-    salary: '$280/hr',
-    salaryHourly: 280,
-    location: 'Los Angeles, CA',
-    locationType: 'onsite',
-    experienceLevel: 'senior',
-    workingSchedule: ['Full time'],
-    employmentType: ['Full day'],
-    ...CARD_STYLES[8]!,
-    saved: false,
-    featured: true,
-  },
-  {
-    id: '10',
-    date: '3 Apr, 2023',
-    company: 'Stripe',
-    title: 'Design Systems Lead',
-    logoColor: 'bg-indigo-600',
-    logoLetter: 'S',
-    tags: ['Full time', 'Lead level', 'Distant', 'Flexible Schedule'],
-    salary: '$350/hr',
-    salaryHourly: 350,
-    location: 'San Francisco, CA',
-    locationType: 'remote',
-    experienceLevel: 'lead',
-    workingSchedule: ['Full time'],
-    employmentType: ['Distant work', 'Flexible schedule'],
-    ...CARD_STYLES[0]!,
-    saved: false,
-  },
-  {
-    id: '11',
-    date: '9 Feb, 2023',
-    company: 'Figma',
-    title: 'Junior Product Designer',
-    logoColor: 'bg-violet-600',
-    logoLetter: 'F',
-    tags: ['Full time', 'Junior level', 'Full Day'],
-    salary: '$95/hr',
-    salaryHourly: 95,
-    location: 'San Francisco, CA',
-    locationType: 'onsite',
-    experienceLevel: 'entry',
-    workingSchedule: ['Full time'],
-    employmentType: ['Full day'],
-    ...CARD_STYLES[1]!,
-    saved: false,
-  },
-  {
-    id: '12',
-    date: '27 Mar, 2023',
-    company: 'Slack',
-    title: 'Interaction Designer',
-    logoColor: 'bg-purple-700',
-    logoLetter: 'S',
-    tags: ['Part time', 'Middle level', 'Distant', 'Project work'],
-    salary: '$175/hr',
-    salaryHourly: 175,
-    location: 'Denver, CO',
-    locationType: 'remote',
-    experienceLevel: 'mid',
-    workingSchedule: ['Part time', 'Project work'],
-    employmentType: ['Distant work'],
-    ...CARD_STYLES[2]!,
-    saved: false,
-  },
-  {
-    id: '13',
-    date: '14 Jun, 2023',
-    company: 'Adobe',
-    title: 'UX Research Intern',
-    logoColor: 'bg-red-700',
-    logoLetter: 'A',
-    tags: ['Internship', 'Entry level', 'Full Day'],
-    salary: '$45/hr',
-    salaryHourly: 45,
-    location: 'San Jose, CA',
-    locationType: 'onsite',
-    experienceLevel: 'entry',
-    workingSchedule: ['Internship'],
-    employmentType: ['Full day'],
-    ...CARD_STYLES[3]!,
-    saved: false,
-  },
-  {
-    id: '14',
-    date: '6 May, 2023',
-    company: 'Shopify',
-    title: 'Brand Designer',
-    logoColor: 'bg-lime-700',
-    logoLetter: 'S',
-    tags: ['Full time', 'Middle level', 'Distant', 'Flexible Schedule'],
-    salary: '$190/hr',
-    salaryHourly: 190,
-    location: 'Ottawa, CA',
-    locationType: 'remote',
-    experienceLevel: 'mid',
-    workingSchedule: ['Full time'],
-    employmentType: ['Distant work', 'Flexible schedule'],
-    ...CARD_STYLES[4]!,
-    saved: false,
-    featured: true,
-  },
-  {
-    id: '15',
-    date: '19 Jan, 2023',
-    company: 'Uber',
-    title: 'Design Engineer',
-    logoColor: 'bg-black',
-    logoLetter: 'U',
-    tags: ['Full time', 'Senior level', 'Full Day', 'Shift work'],
-    salary: '$240/hr',
-    salaryHourly: 240,
-    location: 'San Francisco, CA',
-    locationType: 'hybrid',
-    experienceLevel: 'senior',
-    workingSchedule: ['Full time'],
-    employmentType: ['Full day', 'Shift work'],
-    ...CARD_STYLES[5]!,
-    saved: false,
-  },
+const LOGO_COLORS = [
+  'bg-blue-500',
+  'bg-rose-500',
+  'bg-indigo-600',
+  'bg-green-600',
+  'bg-violet-600',
+  'bg-sky-500',
+  'bg-pink-500',
+  'bg-amber-600',
+  'bg-teal-600',
+  'bg-red-600',
+  'bg-zinc-800',
+  'bg-purple-700',
 ]
+
+function hashString(str: string): number {
+  let hash = 0
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash << 5) - hash + str.charCodeAt(i)
+    hash |= 0
+  }
+  return Math.abs(hash)
+}
 
 // ── Filter Options ─────────────────────────────────────────────────────
 
@@ -361,53 +103,6 @@ export const EMPLOYMENT_TYPE_OPTIONS = [
   { label: 'Shift method', defaultChecked: false },
 ]
 
-// ── Top Recruiters ─────────────────────────────────────────────────────
-
-export const TOP_RECRUITERS: Recruiter[] = [
-  {
-    id: 'r1',
-    name: 'Google',
-    logoColor: 'bg-blue-500',
-    logoLetter: 'G',
-    jobCount: 42,
-  },
-  {
-    id: 'r2',
-    name: 'Amazon',
-    logoColor: 'bg-black',
-    logoLetter: 'a',
-    jobCount: 38,
-  },
-  {
-    id: 'r3',
-    name: 'Apple',
-    logoColor: 'bg-zinc-800',
-    logoLetter: '',
-    jobCount: 31,
-  },
-  {
-    id: 'r4',
-    name: 'Meta',
-    logoColor: 'bg-blue-600',
-    logoLetter: 'M',
-    jobCount: 27,
-  },
-  {
-    id: 'r5',
-    name: 'Spotify',
-    logoColor: 'bg-green-600',
-    logoLetter: 'S',
-    jobCount: 19,
-  },
-  {
-    id: 'r6',
-    name: 'Netflix',
-    logoColor: 'bg-red-600',
-    logoLetter: 'N',
-    jobCount: 15,
-  },
-]
-
 // ── Experience label mapping ───────────────────────────────────────────
 
 export const EXPERIENCE_MAP: Record<string, string[]> = {
@@ -415,4 +110,105 @@ export const EXPERIENCE_MAP: Record<string, string[]> = {
   mid: ['Middle level', 'Mid level'],
   senior: ['Senior level'],
   lead: ['Lead level'],
+}
+
+// ── Employment type display mapping ────────────────────────────────────
+
+const EMPLOYMENT_TYPE_LABELS: Record<string, { schedule: string; type: string[] }> = {
+  full_time: { schedule: 'Full time', type: ['Full day'] },
+  part_time: { schedule: 'Part time', type: ['Flexible schedule'] },
+  contract: { schedule: 'Project work', type: ['Distant work'] },
+  internship: { schedule: 'Internship', type: ['Full day'] },
+}
+
+const EXPERIENCE_LABELS: Record<string, string> = {
+  entry: 'Entry level',
+  mid: 'Mid level',
+  senior: 'Senior level',
+  lead: 'Lead level',
+  executive: 'Executive level',
+}
+
+// ── Mappers ────────────────────────────────────────────────────────────
+
+function formatDate(date: Date): string {
+  const d = new Date(date)
+  return d.toLocaleDateString('en-US', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
+
+function formatSalary(
+  min: number | null,
+  max: number | null,
+  currency: string
+): string {
+  const fmt = (n: number) =>
+    new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: 0,
+    }).format(n)
+
+  if (min && max) return `${fmt(min)} - ${fmt(max)}`
+  if (max) return `Up to ${fmt(max)}`
+  if (min) return `From ${fmt(min)}`
+  return 'Competitive'
+}
+
+export function toDisplayJob(
+  item: PublicJobListItem,
+  index: number
+): PublicJob {
+  const companyName = item.company?.name ?? 'Unknown'
+  const hash = hashString(companyName)
+  const empInfo = EMPLOYMENT_TYPE_LABELS[item.employmentType] ?? {
+    schedule: 'Full time',
+    type: ['Full day'],
+  }
+  const expLabel = EXPERIENCE_LABELS[item.experienceLevel] ?? 'Mid level'
+
+  const tags = [
+    empInfo.schedule,
+    expLabel,
+    ...item.skills.slice(0, 2),
+  ]
+
+  if (item.isRemote) tags.push('Remote')
+
+  const style = CARD_STYLES[index % CARD_STYLES.length]!
+
+  return {
+    id: item.id,
+    date: formatDate(item.createdAt),
+    company: companyName,
+    title: item.title,
+    logoColor: LOGO_COLORS[hash % LOGO_COLORS.length]!,
+    logoLetter: companyName.charAt(0).toUpperCase(),
+    tags,
+    salary: formatSalary(item.salaryMin, item.salaryMax, item.salaryCurrency),
+    salaryNumeric: item.salaryMax ?? item.salaryMin ?? 0,
+    location: item.location ?? (item.isRemote ? 'Remote' : 'Unknown'),
+    locationType: item.isRemote ? 'remote' : 'onsite',
+    experienceLevel: item.experienceLevel,
+    workingSchedule: [empInfo.schedule],
+    employmentType: item.isRemote
+      ? [...empInfo.type, 'Distant work']
+      : empInfo.type,
+    ...style,
+    saved: false,
+  }
+}
+
+export function toDisplayRecruiter(company: TopCompany): Recruiter {
+  const hash = hashString(company.name)
+  return {
+    id: company.id,
+    name: company.name,
+    logoColor: LOGO_COLORS[hash % LOGO_COLORS.length]!,
+    logoLetter: company.name.charAt(0).toUpperCase(),
+    jobCount: company.jobCount,
+  }
 }

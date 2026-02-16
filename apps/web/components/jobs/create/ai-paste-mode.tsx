@@ -1,8 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
+
+import { useCreateJob } from '@/hooks/use-jobs'
 
 import { Button } from '@hackhyre/ui/components/button'
 import { Textarea } from '@hackhyre/ui/components/textarea'
@@ -23,9 +26,39 @@ import { MOCK_AI_PARSED_JOB } from '@/lib/mock-data'
 type ParsedJob = typeof MOCK_AI_PARSED_JOB
 
 export function AIPasteMode() {
+  const router = useRouter()
+  const { mutateAsync, isPending: isCreating } = useCreateJob()
   const [input, setInput] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [parsedData, setParsedData] = useState<ParsedJob | null>(null)
+
+  async function handleCreateFromParsed(data: ParsedJob, asDraft: boolean) {
+    try {
+      await mutateAsync({
+        title: data.title,
+        description: data.description,
+        employmentType: data.employmentType,
+        experienceLevel: data.experienceLevel,
+        location: data.location,
+        isRemote: data.isRemote,
+        salaryMin: data.salaryMin,
+        salaryMax: data.salaryMax,
+        salaryCurrency: data.salaryCurrency,
+        requirements: data.requirements,
+        responsibilities: data.responsibilities,
+        skills: data.skills,
+        status: asDraft ? 'draft' : 'open',
+      })
+      toast.success(asDraft ? 'Draft saved!' : 'Job published!', {
+        description: `"${data.title}" has been ${asDraft ? 'saved as a draft' : 'published'}.`,
+      })
+      router.push('/recuriter/jobs')
+    } catch (error) {
+      toast.error('Failed to create job', {
+        description: error instanceof Error ? error.message : 'Something went wrong',
+      })
+    }
+  }
 
   async function handleAnalyze() {
     if (!input.trim()) {
@@ -52,7 +85,13 @@ export function AIPasteMode() {
   return (
     <AnimatePresence mode="wait">
       {parsedData ? (
-        <AiParseResult key="result" data={parsedData} onBack={handleBack} />
+        <AiParseResult
+          key="result"
+          data={parsedData}
+          onBack={handleBack}
+          onCreateJob={handleCreateFromParsed}
+          isCreating={isCreating}
+        />
       ) : (
         <motion.div
           key="input"

@@ -30,8 +30,9 @@ import {
   People,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
-import { MOCK_JOBS } from '../(components)/mock-data'
-import type { Job } from '../(components)/mock-data'
+import { toDisplayJob } from '../(components)/mock-data'
+import type { PublicJob } from '../(components)/mock-data'
+import { useJobById, usePublicJobs } from '@/hooks/use-jobs'
 import { useSavedJobs } from '../(components)/use-saved-jobs'
 import { useCompanySheet } from '../(components)/use-company-sheet'
 import { CompanySheet } from '../(components)/company-sheet'
@@ -154,7 +155,26 @@ const JOB_DETAILS: Record<string, Partial<JobDetails>> = {
   },
 }
 
-function getJobDetails(id: string): JobDetails {
+function getJobDetails(
+  id: string,
+  raw: import('@/actions/jobs').PublicJobListItem | null | undefined
+): JobDetails {
+  // Use real DB data when available, fall back to defaults
+  if (raw) {
+    return {
+      description: raw.description || DEFAULT_DETAILS.description,
+      responsibilities:
+        raw.responsibilities.length > 0
+          ? raw.responsibilities
+          : DEFAULT_DETAILS.responsibilities,
+      requirements:
+        raw.requirements.length > 0
+          ? raw.requirements
+          : DEFAULT_DETAILS.requirements,
+      skills:
+        raw.skills.length > 0 ? raw.skills : DEFAULT_DETAILS.skills,
+    }
+  }
   const overrides = JOB_DETAILS[id]
   return { ...DEFAULT_DETAILS, ...overrides }
 }
@@ -226,7 +246,7 @@ function ListSection({
   )
 }
 
-function CompanyLogo({ job }: { job: Job }) {
+function CompanyLogo({ job }: { job: PublicJob }) {
   return (
     <div
       className={cn(
@@ -252,7 +272,7 @@ function CompanyLogo({ job }: { job: Job }) {
   )
 }
 
-function SimilarJobCard({ job }: { job: Job }) {
+function SimilarJobCard({ job }: { job: PublicJob }) {
   return (
     <Link
       href={`/jobs-listing/${job.id}`}
@@ -299,24 +319,50 @@ export default function JobDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
-  const job = MOCK_JOBS.find((j) => j.id === id)
+  const { data: rawJob, isLoading } = useJobById(id)
+  const { data: rawSimilar } = usePublicJobs({})
   const toggleSave = useSavedJobs((s) => s.toggle)
   const saved = useSavedJobs((s) => s.saved)
   const openCompanySheet = useCompanySheet((s) => s.open)
   const openApplySheet = useApplySheet((s) => s.open)
 
-  if (!job) {
+  const job = rawJob ? toDisplayJob(rawJob, 0) : null
+
+  if (!isLoading && !job) {
     notFound()
   }
 
-  const details = getJobDetails(id)
+  if (isLoading || !job) {
+    return (
+      <div className="bg-white text-neutral-900" style={LIGHT_VARS}>
+        <div className="mx-auto max-w-360 px-4 py-8 sm:px-6 lg:px-8">
+          <div className="space-y-6">
+            <div className="h-8 w-32 animate-pulse rounded-lg bg-neutral-100" />
+            <div className="h-16 animate-pulse rounded-2xl bg-neutral-100" />
+            <div className="grid gap-6 lg:grid-cols-3">
+              <div className="space-y-6 lg:col-span-2">
+                <div className="h-48 animate-pulse rounded-2xl bg-neutral-100" />
+                <div className="h-64 animate-pulse rounded-2xl bg-neutral-100" />
+              </div>
+              <div className="h-48 animate-pulse rounded-2xl bg-neutral-100" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const details = getJobDetails(id, rawJob)
   const isSaved = saved[job.id] ?? job.saved
 
-  const similarJobs = MOCK_JOBS.filter(
-    (j) =>
-      j.id !== job.id &&
-      (j.company === job.company || j.tags.some((t) => job.tags.includes(t)))
-  ).slice(0, 4)
+  const allJobs = (rawSimilar ?? []).map((item, i) => toDisplayJob(item, i))
+  const similarJobs = allJobs
+    .filter(
+      (j) =>
+        j.id !== job.id &&
+        (j.company === job.company || j.tags.some((t) => job.tags.includes(t)))
+    )
+    .slice(0, 4)
 
   const locationLabel =
     job.locationType === 'remote'

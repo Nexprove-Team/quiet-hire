@@ -1,8 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { toast } from 'sonner'
+
+import { useCreateJob } from '@/hooks/use-jobs'
+import type { CreateJobInput } from '@/actions/job-mutations'
 
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -39,6 +43,8 @@ interface ConstructedJob {
 }
 
 export function VoiceMode() {
+  const router = useRouter()
+  const { mutateAsync, isPending: isCreating } = useCreateJob()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [isTyping, setIsTyping] = useState(false)
@@ -214,10 +220,32 @@ export function VoiceMode() {
     }
   }
 
-  function handleCreateJob() {
-    toast.success('Job created successfully!', {
-      description: `"${constructedJob.title}" has been saved as a draft.`,
-    })
+  async function handleCreateJob() {
+    try {
+      await mutateAsync({
+        title: constructedJob.title ?? 'Untitled Job',
+        description: constructedJob.description ?? '',
+        employmentType: constructedJob.employmentType as CreateJobInput['employmentType'],
+        experienceLevel: constructedJob.experienceLevel as CreateJobInput['experienceLevel'],
+        location: constructedJob.location,
+        isRemote: constructedJob.isRemote,
+        salaryMin: constructedJob.salaryMin,
+        salaryMax: constructedJob.salaryMax,
+        salaryCurrency: constructedJob.salaryCurrency,
+        requirements: constructedJob.requirements,
+        responsibilities: constructedJob.responsibilities,
+        skills: constructedJob.skills,
+        status: 'draft',
+      })
+      toast.success('Job created!', {
+        description: `"${constructedJob.title}" has been saved as a draft.`,
+      })
+      router.push('/recuriter/jobs')
+    } catch (error) {
+      toast.error('Failed to create job', {
+        description: error instanceof Error ? error.message : 'Something went wrong',
+      })
+    }
   }
 
   return (
@@ -305,9 +333,13 @@ export function VoiceMode() {
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <Button className="w-full" size="lg" onClick={handleCreateJob}>
-                <TickCircle size={18} variant="Bold" className="mr-2" />
-                Create Job
+              <Button className="w-full" size="lg" onClick={handleCreateJob} disabled={isCreating}>
+                {isCreating ? (
+                  <Spinner className="mr-2 h-4 w-4" />
+                ) : (
+                  <TickCircle size={18} variant="Bold" className="mr-2" />
+                )}
+                {isCreating ? 'Creating...' : 'Create Job'}
               </Button>
             </motion.div>
           )}
