@@ -25,7 +25,7 @@ export async function POST(req: Request) {
     tools: {
       checkExistingProfile: createCheckExistingProfileTool(userId),
       saveCandidateProfile: createSaveCandidateProfileTool(userId),
-      markOnboardingComplete: createMarkOnboardingCompleteTool(),
+      markOnboardingComplete: createMarkOnboardingCompleteTool(userId),
     },
     stopWhen: stepCountIs(10),
   })
