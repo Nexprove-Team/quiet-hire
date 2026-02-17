@@ -33,7 +33,7 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { toDisplayJob } from '../(components)/mock-data'
 import type { PublicJob } from '../(components)/mock-data'
 import { useJobById, usePublicJobs } from '@/hooks/use-jobs'
-import { useSavedJobs } from '../(components)/use-saved-jobs'
+import { useIsSaved, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 import { useCompanySheet } from '../(components)/use-company-sheet'
 import { CompanySheet } from '../(components)/company-sheet'
 import { useApplySheet } from '../(components)/use-apply-sheet'
@@ -321,8 +321,8 @@ export default function JobDetailPage({
   const { id } = use(params)
   const { data: rawJob, isLoading } = useJobById(id)
   const { data: rawSimilar } = usePublicJobs({})
-  const toggleSave = useSavedJobs((s) => s.toggle)
-  const saved = useSavedJobs((s) => s.saved)
+  const { data: savedData } = useIsSaved(id)
+  const { mutate: toggleSave } = useToggleSaveJob()
   const openCompanySheet = useCompanySheet((s) => s.open)
   const openApplySheet = useApplySheet((s) => s.open)
 
@@ -353,7 +353,7 @@ export default function JobDetailPage({
   }
 
   const details = getJobDetails(id, rawJob)
-  const isSaved = saved[job.id] ?? job.saved
+  const isSaved = savedData?.saved ?? false
 
   const allJobs = (rawSimilar ?? []).map((item, i) => toDisplayJob(item, i))
   const similarJobs = allJobs

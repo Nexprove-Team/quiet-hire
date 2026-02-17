@@ -18,7 +18,7 @@ import { FiltersSidebar } from './(components)/filters-sidebar'
 import { FeaturedSidebar } from './(components)/featured-sidebar'
 import { JobCard } from './(components)/job-card'
 import { useJobListingFilter } from './(components)/use-job-listing-filter'
-import { useSavedJobs } from './(components)/use-saved-jobs'
+import { useSavedJobIds, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 import { toDisplayJob } from './(components)/mock-data'
 import { usePublicJobs } from '@/hooks/use-jobs'
 import type { JobFilters } from '@/actions/jobs'
@@ -29,8 +29,9 @@ const PAGE_SIZE = 6
 
 export default function JobsPage() {
   const [filters, setFilters] = useJobListingFilter()
-  const toggleSave = useSavedJobs((s) => s.toggle)
-  const saved = useSavedJobs((s) => s.saved)
+  const { data: savedIds = [] } = useSavedJobIds()
+  const { mutate: toggleSave } = useToggleSaveJob()
+  const savedSet = useMemo(() => new Set(savedIds), [savedIds])
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE)
   const sentinelRef = useRef<HTMLDivElement>(null)
   const [sort, setSort] = useState<'updated' | 'salary-high' | 'salary-low'>(
@@ -93,7 +94,7 @@ export default function JobsPage() {
   // Add save state to jobs
   const jobsWithSaveState = displayJobs.map((job) => ({
     ...job,
-    saved: saved[job.id] ?? job.saved,
+    saved: savedSet.has(job.id),
   }))
 
   const visibleJobs = jobsWithSaveState.slice(0, visibleCount)

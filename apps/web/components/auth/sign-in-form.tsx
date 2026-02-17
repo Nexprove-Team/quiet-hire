@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod/v4'
@@ -10,7 +10,6 @@ import { toast } from 'sonner'
 import Link from 'next/link'
 import { Eye, EyeSlash, Sms, Lock } from '@hackhyre/ui/icons'
 import { Loader2 } from 'lucide-react'
-
 import { authClient } from '@/lib/auth-client'
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -34,7 +33,7 @@ type SignInValues = z.infer<typeof signInSchema>
 export function SignInForm() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   const form = useForm<SignInValues>({
     resolver: zodResolver(signInSchema),
@@ -45,22 +44,18 @@ export function SignInForm() {
   })
 
   async function onSubmit(values: SignInValues) {
-    setIsLoading(true)
-
-    const { error } = await authClient.signIn.email({
-      email: values.email,
-      password: values.password,
+    startTransition(async () => {
+      const { error } = await authClient.signIn.email({
+        email: values.email,
+        password: values.password,
+      })
+      if (error) {
+        toast.error(error.message ?? 'Invalid credentials')
+        return
+      }
+      toast.success('Welcome back!')
+      router.push('/')
     })
-
-    setIsLoading(false)
-
-    if (error) {
-      toast.error(error.message ?? 'Invalid credentials')
-      return
-    }
-
-    toast.success('Welcome back!')
-    router.push('/')
   }
 
   return (
@@ -105,7 +100,7 @@ export function SignInForm() {
                       type="email"
                       placeholder="you@example.com"
                       autoComplete="email"
-                      disabled={isLoading}
+                      disabled={isPending}
                       className="pl-10"
                       {...field}
                     />
@@ -133,7 +128,7 @@ export function SignInForm() {
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
                       autoComplete="current-password"
-                      disabled={isLoading}
+                      disabled={isPending}
                       className="pr-10 pl-10"
                       {...field}
                     />
@@ -156,8 +151,8 @@ export function SignInForm() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? (
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Signing in...

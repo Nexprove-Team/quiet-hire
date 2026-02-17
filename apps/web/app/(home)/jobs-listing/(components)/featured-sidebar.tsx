@@ -4,7 +4,7 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { Star, TrendUp } from '@hackhyre/ui/icons'
 import { FeaturedJobCard } from './job-card'
 import { useJobListingFilter } from './use-job-listing-filter'
-import { useSavedJobs } from './use-saved-jobs'
+import { useSavedJobIds, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 import { toDisplayJob, toDisplayRecruiter } from './mock-data'
 import { useFeaturedJobs, useTopCompanies } from '@/hooks/use-jobs'
 
@@ -12,8 +12,9 @@ import { useFeaturedJobs, useTopCompanies } from '@/hooks/use-jobs'
 
 export function FeaturedSidebar() {
   const [filters, setFilters] = useJobListingFilter()
-  const toggle = useSavedJobs((s) => s.toggle)
-  const saved = useSavedJobs((s) => s.saved)
+  const { data: savedIds = [] } = useSavedJobIds()
+  const { mutate: toggle } = useToggleSaveJob()
+  const savedSet = new Set(savedIds)
 
   const { data: rawFeatured, isLoading: featuredLoading } = useFeaturedJobs()
   const { data: rawCompanies, isLoading: companiesLoading } = useTopCompanies()
@@ -22,7 +23,7 @@ export function FeaturedSidebar() {
     .map((item, i) => toDisplayJob(item, i))
     .map((job) => ({
       ...job,
-      saved: saved[job.id] ?? job.saved,
+      saved: savedSet.has(job.id),
     }))
 
   const topRecruiters = (rawCompanies ?? []).map(toDisplayRecruiter)

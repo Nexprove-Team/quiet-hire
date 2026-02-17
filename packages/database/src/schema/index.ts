@@ -33,3 +33,6 @@ export {
 
 // Job Transparency Log
 export { jobTransparencyLog } from "./job-transparency-log";
+
+// Saved Jobs
+export { savedJobs } from "./saved-jobs";
