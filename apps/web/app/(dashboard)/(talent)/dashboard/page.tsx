@@ -1,6 +1,7 @@
 'use client'
 
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
+import { formatDistanceToNow } from 'date-fns'
 import {
   Briefcase,
   DocumentText,
@@ -173,7 +174,7 @@ function CandidateRecentApplications() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-muted-foreground pr-6 text-right text-[13px]">
-                    {formatRelativeDate(app.appliedAt)}
+                    {formatDistanceToNow(new Date(app.appliedAt), { addSuffix: true })}
                   </TableCell>
                 </TableRow>
               )
@@ -237,7 +238,7 @@ function CandidateActivityFeed() {
                   {activity.description}
                 </p>
                 <p className="text-muted-foreground/60 mt-1 text-[11px]">
-                  {formatRelativeDate(activity.timestamp)}
+                  {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
                 </p>
               </div>
             </div>
@@ -248,20 +249,6 @@ function CandidateActivityFeed() {
   )
 }
 
-// ── Helpers ───────────────────────────────────────────────────────
-
-function formatRelativeDate(dateStr: string): string {
-  const now = new Date('2026-02-12T12:00:00')
-  const date = new Date(dateStr)
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return '1d ago'
-  if (diffDays < 7) return `${diffDays}d ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
 // ── Page ──────────────────────────────────────────────────────────
 

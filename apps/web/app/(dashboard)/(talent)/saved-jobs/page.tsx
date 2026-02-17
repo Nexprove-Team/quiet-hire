@@ -32,24 +32,12 @@ import {
   DollarCircle,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
+import { formatDistanceToNow } from 'date-fns'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { useSavedJobsList, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 import type { SavedJobListItem } from '@/actions/saved-jobs'
 
 // --- Helpers ---
-
-function formatRelativeDate(date: Date | string): string {
-  const now = new Date()
-  const d = typeof date === 'string' ? new Date(date) : date
-  const diffMs = now.getTime() - d.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return '1d ago'
-  if (diffDays < 7) return `${diffDays}d ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
 function formatSalary(
   min: number | null,
@@ -396,7 +384,7 @@ export default function SavedJobsPage() {
                             )}
                             <span className="flex items-center gap-1">
                               <Calendar size={11} variant="Linear" />
-                              Saved {formatRelativeDate(item.savedAt)}
+                              Saved {formatDistanceToNow(new Date(item.savedAt), { addSuffix: true })}
                             </span>
                           </div>
                         </div>

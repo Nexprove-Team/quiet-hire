@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import { motion } from 'motion/react'
 import {
@@ -45,19 +46,6 @@ const STATUS_FILTERS: { label: string; value: ApplicationStatus | 'all' }[] = [
   { label: 'Hired', value: 'hired' },
   { label: 'Rejected', value: 'rejected' },
 ]
-
-function formatRelativeDate(date: Date | string): string {
-  const now = new Date()
-  const d = typeof date === 'string' ? new Date(date) : date
-  const diffMs = now.getTime() - d.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  if (diffDays === 0) return 'Today'
-  if (diffDays === 1) return '1d ago'
-  if (diffDays < 7) return `${diffDays}d ago`
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-}
 
 function formatSalary(
   min: number | null,
@@ -437,7 +425,7 @@ export default function ApplicationsPage() {
                             )}
                             <span className="flex items-center gap-1">
                               <Calendar size={11} variant="Linear" />
-                              Applied {formatRelativeDate(app.appliedAt)}
+                              Applied {formatDistanceToNow(new Date(app.appliedAt), { addSuffix: true })}
                             </span>
                           </div>
                         </div>
