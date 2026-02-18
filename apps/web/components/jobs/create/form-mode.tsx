@@ -92,8 +92,10 @@ export function FormMode() {
     try {
       await mutateAsync({
         ...values,
-        employmentType: values.employmentType as CreateJobInput['employmentType'],
-        experienceLevel: values.experienceLevel as CreateJobInput['experienceLevel'],
+        employmentType:
+          values.employmentType as CreateJobInput['employmentType'],
+        experienceLevel:
+          values.experienceLevel as CreateJobInput['experienceLevel'],
         status: asDraft ? 'draft' : 'open',
       })
       toast.success(asDraft ? 'Draft saved!' : 'Job published!', {
@@ -102,7 +104,8 @@ export function FormMode() {
       router.push('/recuriter/jobs')
     } catch (error) {
       toast.error('Failed to create job', {
-        description: error instanceof Error ? error.message : 'Something went wrong',
+        description:
+          error instanceof Error ? error.message : 'Something went wrong',
       })
     }
   }
@@ -112,7 +115,10 @@ export function FormMode() {
       {/* Form */}
       <div className="lg:col-span-3">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit((v) => onSubmit(v, false))} className="space-y-5">
+          <form
+            onSubmit={form.handleSubmit((v) => onSubmit(v, false))}
+            className="space-y-5"
+          >
             {/* Basic Info */}
             <Card>
               <CardHeader className="pb-3">
@@ -154,6 +160,7 @@ export function FormMode() {
                           placeholder="Describe the role, responsibilities, and what you're looking for..."
                           rows={5}
                           {...field}
+                          className="h-37.5 resize-none"
                         />
                       </FormControl>
                       <FormMessage />
@@ -173,7 +180,7 @@ export function FormMode() {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select type" />
                             </SelectTrigger>
                           </FormControl>
@@ -202,7 +209,7 @@ export function FormMode() {
                           defaultValue={field.value}
                         >
                           <FormControl>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select level" />
                             </SelectTrigger>
                           </FormControl>

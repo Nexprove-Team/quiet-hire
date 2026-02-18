@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -33,8 +33,7 @@ import {
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCandidateSidebar } from '@/hooks/use-candidate-sidebar'
 import { CANDIDATE_BREADCRUMB_MAP } from '@/lib/candidate-constants'
-import { useSession } from '@/lib/auth-client'
-// TODO: Replace with real notifications when a notifications system is built
+import { authClient, useSession } from '@/lib/auth-client'
 import { MOCK_CANDIDATE_NOTIFICATIONS } from '@/lib/candidate-mock-data'
 
 function CandidateBreadcrumbs() {
@@ -116,7 +115,7 @@ function CandidateNotificationsPopover() {
               key={n.id}
               className={cn(
                 'hover:bg-accent/50 flex gap-3 border-b px-4 py-3 transition-colors last:border-0',
-                !n.read && 'bg-primary/[0.02]'
+                !n.read && 'bg-primary/2'
               )}
             >
               <div
@@ -168,6 +167,7 @@ function CandidateNotificationsPopover() {
 
 function CandidateUserNav() {
   const { data: session } = useSession()
+  const router = useRouter()
   const userName = session?.user?.name ?? ''
   const userEmail = session?.user?.email ?? ''
 
@@ -195,9 +195,7 @@ function CandidateUserNav() {
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate text-sm font-semibold">
-                {userName}
-              </p>
+              <p className="truncate text-sm font-semibold">{userName}</p>
               <p className="text-muted-foreground truncate text-xs">
                 {userEmail}
               </p>
@@ -218,7 +216,18 @@ function CandidateUserNav() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive focus:text-destructive gap-2 text-[13px]">
+        <DropdownMenuItem
+          className="text-destructive focus:text-destructive gap-2 text-[13px]"
+          onClick={async () => {
+            await authClient.signOut({
+              fetchOptions: {
+                onSuccess: () => {
+                  router.push('/')
+                },
+              },
+            })
+          }}
+        >
           <LogoutCurve size={15} variant="Linear" />
           Sign Out
         </DropdownMenuItem>
@@ -232,7 +241,6 @@ export function CandidateHeader() {
 
   return (
     <header className="bg-card/80 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur-sm">
-      {/* Mobile hamburger */}
       <Button
         variant="ghost"
         size="icon"

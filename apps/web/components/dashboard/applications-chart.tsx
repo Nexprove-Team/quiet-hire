@@ -13,7 +13,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@hackhyre/ui/components/chart'
-import { MOCK_CHART_DATA } from '@/lib/mock-data'
+import { Chart } from '@hackhyre/ui/icons'
 
 const chartConfig = {
   applications: {
@@ -22,7 +22,40 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function ApplicationsChart() {
+interface ApplicationsChartProps {
+  data: { date: string; applications: number }[]
+}
+
+export function ApplicationsChart({ data }: ApplicationsChartProps) {
+  const hasData = data.some((d) => d.applications > 0)
+
+  if (!hasData) {
+    return (
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">
+            Applications This Week
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Chart
+              size={32}
+              variant="Linear"
+              className="text-muted-foreground/30 mb-2"
+            />
+            <p className="text-muted-foreground text-[13px]">
+              No applications received this week
+            </p>
+            <p className="text-muted-foreground/60 mt-1 text-[12px]">
+              Data will appear here as candidates apply to your jobs
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -33,7 +66,7 @@ export function ApplicationsChart() {
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[220px] w-full">
           <AreaChart
-            data={MOCK_CHART_DATA}
+            data={data}
             margin={{ top: 8, right: 8, left: -16, bottom: 0 }}
           >
             <defs>

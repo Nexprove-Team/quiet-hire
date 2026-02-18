@@ -1,6 +1,6 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'motion/react'
 import { TooltipProvider } from '@hackhyre/ui/components/tooltip'
 import { Separator } from '@hackhyre/ui/components/separator'
@@ -26,6 +26,7 @@ import {
   SIDEBAR_WIDTH_COLLAPSED,
 } from '@/lib/constants'
 import type { User } from '@hackhyre/db/auth'
+import { authClient } from '@/lib/auth-client'
 
 function CandidateSidebarContent({
   isCollapsed,
@@ -36,6 +37,7 @@ function CandidateSidebarContent({
   user?: User
   badges?: Record<string, number>
 }) {
+  const router = useRouter()
   const pathname = usePathname()
   const toggle = useCandidateSidebar((s) => s.toggle)
 
@@ -224,7 +226,15 @@ function CandidateSidebarContent({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => {}}
+                onClick={async () => {
+                  await authClient.signOut({
+                    fetchOptions: {
+                      onSuccess: () => {
+                        router.push('/')
+                      },
+                    },
+                  })
+                }}
                 className="text-muted-foreground hover:text-foreground shrink-0 rounded-lg p-1 transition-colors"
               >
                 <LogoutCurve size={16} variant="Linear" />

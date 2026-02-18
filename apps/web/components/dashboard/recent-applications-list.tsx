@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { formatDistanceToNow } from 'date-fns'
 import {
   Card,
   CardContent,
@@ -13,26 +14,59 @@ import { Progress } from '@hackhyre/ui/components/progress'
 import { Button } from '@hackhyre/ui/components/button'
 import { ArrowRight } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
-import { MOCK_APPLICATIONS } from '@/lib/mock-data'
+import { DocumentText } from '@hackhyre/ui/icons'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
 
-function getRelativeTime(dateStr: string): string {
-  const now = new Date('2026-02-09T00:00:00')
-  const date = new Date(dateStr)
-  const diffMs = now.getTime() - date.getTime()
-  const diffH = Math.floor(diffMs / (1000 * 60 * 60))
-
-  if (diffH < 1) return 'Just now'
-  if (diffH < 24) return `${diffH}h ago`
-  const diffD = Math.floor(diffH / 24)
-  return `${diffD}d ago`
+interface RecentApplication {
+  id: string
+  candidateName: string
+  candidateEmail: string
+  candidateId: string | null
+  jobTitle: string
+  status: string
+  relevanceScore: number | null
+  createdAt: Date
 }
 
-export function RecentApplicationsList() {
+interface RecentApplicationsListProps {
+  applications: RecentApplication[]
+}
+
+export function RecentApplicationsList({
+  applications,
+}: RecentApplicationsListProps) {
   const openCandidate = useCandidateSheet((s) => s.open)
-  const applications = MOCK_APPLICATIONS.slice(0, 6)
-  const candidateIds = applications.map((a) => a.candidateId)
+  const candidateIds = applications
+    .map((a) => a.candidateId)
+    .filter((id): id is string => id !== null)
+
+  if (applications.length === 0) {
+    return (
+      <Card className="h-full">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">
+            Recent Applications
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <DocumentText
+              size={32}
+              variant="Linear"
+              className="text-muted-foreground/30 mb-2"
+            />
+            <p className="text-muted-foreground text-[13px]">
+              No applications yet
+            </p>
+            <p className="text-muted-foreground/60 mt-1 text-[12px]">
+              Applications will show up here once candidates start applying
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>
@@ -46,7 +80,7 @@ export function RecentApplicationsList() {
           className="text-muted-foreground"
           asChild
         >
-          <Link href="/applications">
+          <Link href="/recuriter/applications">
             View All
             <ArrowRight size={14} variant="Linear" className="ml-1" />
           </Link>
@@ -64,7 +98,10 @@ export function RecentApplicationsList() {
           return (
             <button
               key={app.id}
-              onClick={() => openCandidate(app.candidateId, candidateIds)}
+              onClick={() =>
+                app.candidateId &&
+                openCandidate(app.candidateId, candidateIds)
+              }
               className="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors"
             >
               <Avatar className="h-9 w-9 shrink-0">
@@ -79,7 +116,9 @@ export function RecentApplicationsList() {
                     {app.candidateName}
                   </p>
                   <span className="text-muted-foreground shrink-0 text-[11px]">
-                    {getRelativeTime(app.createdAt)}
+                    {formatDistanceToNow(new Date(app.createdAt), {
+                      addSuffix: true,
+                    })}
                   </span>
                 </div>
                 <p className="text-muted-foreground truncate text-xs">

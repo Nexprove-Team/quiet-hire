@@ -6,6 +6,12 @@ import {
   TabsList,
   TabsTrigger,
 } from '@hackhyre/ui/components/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@hackhyre/ui/components/tooltip'
 import { Microphone2, DocumentText, Magicpen } from '@hackhyre/ui/icons'
 
 import { VoiceMode } from '@/components/jobs/create/voice-mode'
@@ -34,10 +40,25 @@ export default function CreateJobPage() {
             <DocumentText size={16} variant="Linear" />
             Form
           </TabsTrigger>
-          <TabsTrigger value="paste" className="gap-1.5">
-            <Magicpen size={16} variant="Linear" />
-            AI Paste
-          </TabsTrigger>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <TabsTrigger
+                    value="paste"
+                    className="gap-1.5 disabled:cursor-not-allowed"
+                    disabled
+                  >
+                    <Magicpen size={16} variant="Linear" />
+                    AI Paste
+                  </TabsTrigger>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Coming soon</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </TabsList>
 
         <TabsContent value="voice">
