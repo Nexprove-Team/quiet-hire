@@ -81,10 +81,10 @@ function mapRow(row: {
     },
     company: row.company
       ? {
-          name: row.company.name,
-          website: row.company.website,
-          logoUrl: row.company.logoUrl,
-        }
+        name: row.company.name,
+        website: row.company.website,
+        logoUrl: row.company.logoUrl,
+      }
       : null,
   }
 }
@@ -156,4 +156,32 @@ export async function getCandidateApplication(
     ...mapRow(row),
     matchAnalysis: row.application.matchAnalysis ?? null,
   }
+}
+
+
+
+export async function getCandidateSidebarBadges(): Promise<
+  Record<string, number>
+> {
+  const session = await getSession()
+  if (!session) return {}
+
+  const rows = await db
+    .select({ status: applications.status })
+    .from(applications)
+    .where(eq(applications.candidateId, session.user.id))
+
+  const activeCount = rows.filter(
+    (r) =>
+      r.status === 'not_reviewed' ||
+      r.status === 'under_review' ||
+      r.status === 'interviewing'
+  ).length
+
+  const badges: Record<string, number> = {}
+  if (activeCount > 0) {
+    badges['/applications'] = activeCount
+  }
+
+  return badges
 }

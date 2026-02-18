@@ -10,19 +10,14 @@ import {
 
 export const CANDIDATE_NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: Home },
-  {
-    label: 'Applications',
-    href: '/applications',
-    icon: Briefcase,
-    badge: 5,
-  },
+  { label: 'Applications', href: '/applications', icon: Briefcase },
   { label: 'Saved Jobs', href: '/saved-jobs', icon: Bookmark },
-  { label: 'Messages', href: '/messages', icon: Messages, badge: 2 },
+  { label: 'Messages', href: '/messages', icon: Messages, isDisabled: true },
 ]
 
 export const CANDIDATE_BOTTOM_ITEMS: NavItem[] = [
   { label: 'Profile', href: '/profile', icon: Profile },
-  { label: 'Settings', href: '/settings', icon: Setting },
+  { label: 'Settings', href: '/settings', icon: Setting, isDisabled: true },
 ]
 
 export const CANDIDATE_BREADCRUMB_MAP: Record<string, string> = {

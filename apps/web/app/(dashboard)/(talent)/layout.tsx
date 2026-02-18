@@ -1,4 +1,5 @@
 import { getSession } from '@/lib/auth-session'
+import { getCandidateSidebarBadges } from '@/actions/applications'
 import { CandidateSidebar } from '@/components/dashboard/candidate-sidebar'
 import { CandidateHeader } from '@/components/dashboard/candidate-header'
 
@@ -7,11 +8,14 @@ export default async function CandidateDashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getSession()
+  const [session, badges] = await Promise.all([
+    getSession(),
+    getCandidateSidebarBadges(),
+  ])
   const user = session?.user
   return (
     <div className="flex h-svh overflow-hidden">
-      <CandidateSidebar user={user} />
+      <CandidateSidebar user={user} badges={badges} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <CandidateHeader />
         <main className="flex-1 overflow-y-auto p-6">{children}</main>

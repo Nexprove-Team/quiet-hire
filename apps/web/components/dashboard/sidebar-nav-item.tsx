@@ -9,6 +9,7 @@ import {
 } from '@hackhyre/ui/components/tooltip'
 import { cn } from '@hackhyre/ui/lib/utils'
 import type { Icon } from '@hackhyre/ui/icons'
+import { toast } from 'sonner'
 
 interface SidebarNavItemProps {
   icon: Icon
@@ -17,6 +18,7 @@ interface SidebarNavItemProps {
   badge?: number
   isCollapsed: boolean
   isActive: boolean
+  disabled?: boolean
 }
 
 export function SidebarNavItem({
@@ -26,10 +28,11 @@ export function SidebarNavItem({
   badge,
   isCollapsed,
   isActive,
+  disabled = false,
 }: SidebarNavItemProps) {
   const inner = (
     <Link
-      href={href}
+      href={disabled ? '#' : href}
       className={cn(
         'group/item relative flex items-center rounded-xl transition-all duration-200',
         isCollapsed ? 'justify-center p-2.5' : 'gap-3 px-3 py-2.5',
@@ -37,6 +40,12 @@ export function SidebarNavItem({
           ? 'bg-primary/10 text-primary'
           : 'text-muted-foreground hover:bg-accent hover:text-foreground'
       )}
+      onClick={() => {
+        if (disabled) {
+          toast.info('route currently in progress')
+          return
+        }
+      }}
     >
       {/* Active left border indicator */}
       {isActive && (
@@ -44,7 +53,7 @@ export function SidebarNavItem({
           layoutId="sidebar-active-indicator"
           className={cn(
             'bg-primary absolute top-1/2 left-0 -translate-y-1/2 rounded-r-full',
-            isCollapsed ? 'h-4 w-[2px]' : 'h-5 w-[3px]'
+            isCollapsed ? 'h-4 w-0.5' : 'h-5 w-0.75'
           )}
           transition={{ type: 'spring', stiffness: 350, damping: 30 }}
         />

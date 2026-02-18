@@ -14,6 +14,7 @@ export interface NavItem {
   href: string
   icon: Icon
   badge?: number
+  isDisabled?: boolean
 }
 
 export const SIDEBAR_NAV_ITEMS: NavItem[] = [

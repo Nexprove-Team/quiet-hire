@@ -30,9 +30,11 @@ import type { User } from '@hackhyre/db/auth'
 function CandidateSidebarContent({
   isCollapsed,
   user,
+  badges,
 }: {
   isCollapsed: boolean
   user?: User
+  badges?: Record<string, number>
 }) {
   const pathname = usePathname()
   const toggle = useCandidateSidebar((s) => s.toggle)
@@ -137,13 +139,14 @@ function CandidateSidebarContent({
             icon={item.icon}
             label={item.label}
             href={item.href}
-            badge={item.badge}
+            badge={badges?.[item.href]}
             isCollapsed={isCollapsed}
             isActive={
               item.href === '/talent/dashboard'
                 ? pathname === '/talent/dashboard' || pathname === '/talent'
                 : pathname.startsWith(item.href)
             }
+            disabled={item.isDisabled}
           />
         ))}
 
@@ -172,6 +175,7 @@ function CandidateSidebarContent({
             href={item.href}
             isCollapsed={isCollapsed}
             isActive={pathname.startsWith(item.href)}
+            disabled={item.isDisabled}
           />
         ))}
       </nav>
@@ -250,7 +254,13 @@ function CandidateSidebarContent({
   )
 }
 
-export function CandidateSidebar({ user }: { user?: User }) {
+export function CandidateSidebar({
+  user,
+  badges,
+}: {
+  user?: User
+  badges?: Record<string, number>
+}) {
   const isCollapsed = useCandidateSidebar((s) => s.isCollapsed)
   const isMobileOpen = useCandidateSidebar((s) => s.isMobileOpen)
   const closeMobile = useCandidateSidebar((s) => s.closeMobile)
@@ -267,7 +277,11 @@ export function CandidateSidebar({ user }: { user?: User }) {
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
           className="bg-card hidden h-full shrink-0 overflow-hidden border-r lg:block"
         >
-          <CandidateSidebarContent isCollapsed={isCollapsed} user={user} />
+          <CandidateSidebarContent
+            isCollapsed={isCollapsed}
+            user={user}
+            badges={badges}
+          />
         </motion.aside>
       </TooltipProvider>
 
@@ -278,7 +292,11 @@ export function CandidateSidebar({ user }: { user?: User }) {
         <SheetContent side="left" className="w-70 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <TooltipProvider>
-            <CandidateSidebarContent isCollapsed={false} user={user} />
+            <CandidateSidebarContent
+              isCollapsed={false}
+              user={user}
+              badges={badges}
+            />
           </TooltipProvider>
         </SheetContent>
       </Sheet>
