@@ -16,7 +16,6 @@ import { cn } from '@hackhyre/ui/lib/utils'
 
 import { SidebarNavItem } from './sidebar-nav-item'
 import { useCandidateSidebar } from '@/hooks/use-candidate-sidebar'
-import { MOCK_CANDIDATE_USER } from '@/lib/candidate-mock-data'
 import Link from 'next/link'
 import {
   CANDIDATE_NAV_ITEMS,
@@ -26,20 +25,27 @@ import {
   SIDEBAR_WIDTH_EXPANDED,
   SIDEBAR_WIDTH_COLLAPSED,
 } from '@/lib/constants'
+import type { User } from '@hackhyre/db/auth'
 
-function CandidateSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
+function CandidateSidebarContent({
+  isCollapsed,
+  user,
+}: {
+  isCollapsed: boolean
+  user?: User
+}) {
   const pathname = usePathname()
   const toggle = useCandidateSidebar((s) => s.toggle)
 
-  const initials = MOCK_CANDIDATE_USER.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
+  const initials =
+    user?.name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase() ?? ''
 
   return (
     <div className="flex h-full flex-col">
-      {/* Logo area */}
       <div
         className={cn(
           'flex h-16 shrink-0 items-center px-5',
@@ -170,7 +176,6 @@ function CandidateSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
         ))}
       </nav>
 
-      {/* User profile section at bottom */}
       <div
         className={cn(
           'shrink-0 border-t p-3',
@@ -200,10 +205,10 @@ function CandidateSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
                 className="min-w-0 flex-1"
               >
                 <p className="truncate text-[13px] font-semibold">
-                  {MOCK_CANDIDATE_USER.name}
+                  {user?.name}
                 </p>
                 <p className="text-muted-foreground truncate text-[11px]">
-                  {MOCK_CANDIDATE_USER.headline}
+                  {user?.email}
                 </p>
               </motion.div>
             )}
@@ -224,7 +229,6 @@ function CandidateSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
           </AnimatePresence>
         </div>
 
-        {/* Collapse toggle */}
         <button
           onClick={toggle}
           className={cn(
@@ -246,7 +250,7 @@ function CandidateSidebarContent({ isCollapsed }: { isCollapsed: boolean }) {
   )
 }
 
-export function CandidateSidebar() {
+export function CandidateSidebar({ user }: { user?: User }) {
   const isCollapsed = useCandidateSidebar((s) => s.isCollapsed)
   const isMobileOpen = useCandidateSidebar((s) => s.isMobileOpen)
   const closeMobile = useCandidateSidebar((s) => s.closeMobile)
@@ -263,7 +267,7 @@ export function CandidateSidebar() {
           transition={{ type: 'spring', stiffness: 320, damping: 28 }}
           className="bg-card hidden h-full shrink-0 overflow-hidden border-r lg:block"
         >
-          <CandidateSidebarContent isCollapsed={isCollapsed} />
+          <CandidateSidebarContent isCollapsed={isCollapsed} user={user} />
         </motion.aside>
       </TooltipProvider>
 
@@ -274,7 +278,7 @@ export function CandidateSidebar() {
         <SheetContent side="left" className="w-70 p-0">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
           <TooltipProvider>
-            <CandidateSidebarContent isCollapsed={false} />
+            <CandidateSidebarContent isCollapsed={false} user={user} />
           </TooltipProvider>
         </SheetContent>
       </Sheet>
