@@ -26,9 +26,23 @@ jobs:
             - name: Run React Doctor
               id: doctor
               run: |
-                  npx -y react-doctor@latest apps/web --verbose 2>&1 | tee react-doctor-report.txt || true
-                  SCORE=$(npx -y react-doctor@latest apps/web --score 2>/dev/null || echo "N/A")
-                  echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+                  echo "=== apps/web ===" | tee react-doctor-report.txt
+                  npx -y react-doctor@latest apps/web --verbose 2>&1 | tee -a react-doctor-report.txt || true
+                  WEB_SCORE=$(npx -y react-doctor@latest apps/web --score 2>/dev/null || echo "N/A")
+
+                  echo "" >> react-doctor-report.txt
+                  echo "=== apps/admin ===" | tee -a react-doctor-report.txt
+                  npx -y react-doctor@latest apps/admin --verbose 2>&1 | tee -a react-doctor-report.txt || true
+                  ADMIN_SCORE=$(npx -y react-doctor@latest apps/admin --score 2>/dev/null || echo "N/A")
+
+                  echo "" >> react-doctor-report.txt
+                  echo "=== apps/waitlist ===" | tee -a react-doctor-report.txt
+                  npx -y react-doctor@latest apps/waitlist --verbose 2>&1 | tee -a react-doctor-report.txt || true
+                  WAITLIST_SCORE=$(npx -y react-doctor@latest apps/waitlist --score 2>/dev/null || echo "N/A")
+
+                  echo "web_score=$WEB_SCORE" >> "$GITHUB_OUTPUT"
+                  echo "admin_score=$ADMIN_SCORE" >> "$GITHUB_OUTPUT"
+                  echo "waitlist_score=$WAITLIST_SCORE" >> "$GITHUB_OUTPUT"
 
             - name: Upload report artifact
               uses: actions/upload-artifact@v4
@@ -44,12 +58,18 @@ jobs:
                   script: |
                       const fs = require('fs');
                       const report = fs.readFileSync('react-doctor-report.txt', 'utf8');
-                      const score = '${{ steps.doctor.outputs.score }}' || 'N/A';
+                      const webScore = '${{ steps.doctor.outputs.web_score }}' || 'N/A';
+                      const adminScore = '${{ steps.doctor.outputs.admin_score }}' || 'N/A';
+                      const waitlistScore = '${{ steps.doctor.outputs.waitlist_score }}' || 'N/A';
 
                       const body = [
                         '## React Doctor Report',
                         '',
-                        `**Score: ${score} / 100**`,
+                        '| App | Score |',
+                        '|-----|-------|',
+                        `| web | ${webScore} / 100 |`,
+                        `| admin | ${adminScore} / 100 |`,
+                        `| waitlist | ${waitlistScore} / 100 |`,
                         '',
                         '<details>',
                         '<summary>Full diagnostics</summary>',
