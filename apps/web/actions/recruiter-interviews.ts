@@ -36,6 +36,8 @@ export interface RecruiterInterview {
   status: InterviewStatus
   interviewType: InterviewType
   notes: string | null
+  feedback: string | null
+  rating: number | null
   reminderSent: boolean
   createdAt: Date
   updatedAt: Date
@@ -84,6 +86,8 @@ export async function getRecruiterInterviews(): Promise<
     status: i.status as InterviewStatus,
     interviewType: i.interviewType as InterviewType,
     notes: i.notes,
+    feedback: i.feedback,
+    rating: i.rating,
     reminderSent: i.reminderSent,
     createdAt: i.createdAt,
     updatedAt: i.updatedAt,
@@ -207,10 +211,51 @@ export async function scheduleInterview(
     status: created!.status as InterviewStatus,
     interviewType: created!.interviewType as InterviewType,
     notes: created!.notes,
+    feedback: created!.feedback,
+    rating: created!.rating,
     reminderSent: created!.reminderSent,
     createdAt: created!.createdAt,
     updatedAt: created!.updatedAt,
   }
+}
+
+// ── Submit Interview Feedback ────────────────────────────────────────
+
+export async function submitInterviewFeedback({
+  interviewId,
+  rating,
+  feedback,
+}: {
+  interviewId: string
+  rating: number
+  feedback: string
+}) {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  // Verify ownership
+  const [interview] = await db
+    .select()
+    .from(interviews)
+    .where(
+      and(
+        eq(interviews.id, interviewId),
+        eq(interviews.recruiterId, session.user.id)
+      )
+    )
+
+  if (!interview) throw new Error('Interview not found')
+  if (interview.status !== 'completed') {
+    throw new Error('Can only submit feedback for completed interviews')
+  }
+  if (rating < 1 || rating > 5) {
+    throw new Error('Rating must be between 1 and 5')
+  }
+
+  await db
+    .update(interviews)
+    .set({ feedback, rating, updatedAt: new Date() })
+    .where(eq(interviews.id, interviewId))
 }
 
 // ── Cancel Interview ─────────────────────────────────────────────────

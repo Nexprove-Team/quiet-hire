@@ -32,15 +32,18 @@ import {
   DocumentText,
   TaskSquare,
   Code,
+  Play,
 } from '@hackhyre/ui/icons'
 import { Skeleton } from '@hackhyre/ui/components/skeleton'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { JOB_STATUS_CONFIG, APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
 import { useRecruiterJobDetail } from '@/hooks/use-recruiter-jobs'
+import { useUpdateJob } from '@/hooks/use-jobs'
 import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
 import { ApplicationStatusSelect } from '@/components/applications/status-select'
 import { Streamdown } from 'streamdown'
+import { toast } from 'sonner'
 
 const STATUS_ICON: Record<string, typeof TickCircle> = {
   open: TickCircle,
@@ -145,6 +148,7 @@ export default function JobDetailPage(
   const { id } = use(props.params)
   const { data: job, isLoading, error } = useRecruiterJobDetail(id)
   const openCandidate = useCandidateSheet((s) => s.open)
+  const updateJob = useUpdateJob()
 
   if (isLoading) {
     return (
@@ -170,9 +174,7 @@ export default function JobDetailPage(
   }
 
   const jobApplications = job.applications
-  const applicantIds = jobApplications
-    .map((a) => a.candidateId)
-    .filter((id): id is string => id !== null)
+  const applicationIds = jobApplications.map((a) => a.id)
   const statusConfig = JOB_STATUS_CONFIG[job.status]
   const StatusIcon = STATUS_ICON[job.status] ?? Clock
   const salary = formatSalary(job.salaryMin, job.salaryMax, job.salaryCurrency)
@@ -200,6 +202,44 @@ export default function JobDetailPage(
             <Copy size={14} variant="Linear" />
             Duplicate
           </Button>
+          {(job.status === 'open' || job.status === 'paused') && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 rounded-lg text-[13px]"
+              disabled={updateJob.isPending}
+              onClick={() => {
+                const newStatus = job.status === 'open' ? 'paused' : 'open'
+                updateJob.mutate(
+                  { id, status: newStatus },
+                  {
+                    onSuccess: () =>
+                      toast.success(
+                        newStatus === 'paused'
+                          ? 'Job paused'
+                          : 'Job resumed'
+                      ),
+                    onError: (err) =>
+                      toast.error('Failed to update job', {
+                        description: err.message,
+                      }),
+                  }
+                )
+              }}
+            >
+              {job.status === 'open' ? (
+                <>
+                  <PauseCircle size={14} variant="Linear" />
+                  Pause
+                </>
+              ) : (
+                <>
+                  <Play size={14} variant="Linear" />
+                  Resume
+                </>
+              )}
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -449,8 +489,7 @@ export default function JobDetailPage(
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: i * 0.05, duration: 0.2 }}
                           onClick={() =>
-                            app.candidateId &&
-                            openCandidate(app.candidateId, applicantIds)
+                            openCandidate(app.id, applicationIds)
                           }
                           className="hover:bg-accent/50 flex w-full items-center gap-3 rounded-xl p-2.5 text-left transition-colors"
                         >

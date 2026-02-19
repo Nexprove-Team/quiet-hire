@@ -1,10 +1,12 @@
 'use client'
 
+import { useState } from 'react'
 import { Sheet, SheetContent, SheetTitle } from '@hackhyre/ui/components/sheet'
 import { Avatar, AvatarFallback } from '@hackhyre/ui/components/avatar'
 import { Badge } from '@hackhyre/ui/components/badge'
 import { Button } from '@hackhyre/ui/components/button'
 import { Separator } from '@hackhyre/ui/components/separator'
+import { Textarea } from '@hackhyre/ui/components/textarea'
 import {
   Calendar,
   Clock,
@@ -16,6 +18,7 @@ import {
   ArrowRight,
   LinkIcon,
   InfoCircle,
+  Star,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { toast } from 'sonner'
@@ -27,6 +30,7 @@ import {
 import {
   useRecruiterInterviews,
   useCancelInterview,
+  useSubmitInterviewFeedback,
 } from '@/hooks/use-recruiter-interviews'
 import type { RecruiterInterview } from '@/actions/recruiter-interviews'
 
@@ -85,6 +89,79 @@ function formatDateTime(date: Date) {
       minute: '2-digit',
       hour12: true,
     })
+}
+
+// ── Feedback Form ────────────────────────────────────────────────────
+
+function InterviewFeedbackForm({ interviewId }: { interviewId: string }) {
+  const [rating, setRating] = useState(0)
+  const [hoveredRating, setHoveredRating] = useState(0)
+  const [feedbackText, setFeedbackText] = useState('')
+  const submitFeedback = useSubmitInterviewFeedback()
+
+  const displayRating = hoveredRating || rating
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-1">
+        {[1, 2, 3, 4, 5].map((value) => (
+          <button
+            key={value}
+            type="button"
+            className="p-0.5 transition-transform hover:scale-110"
+            onMouseEnter={() => setHoveredRating(value)}
+            onMouseLeave={() => setHoveredRating(0)}
+            onClick={() => setRating(value)}
+          >
+            <Star
+              size={20}
+              variant={value <= displayRating ? 'Bold' : 'Linear'}
+              className={cn(
+                'transition-colors',
+                value <= displayRating
+                  ? 'text-amber-500'
+                  : 'text-muted-foreground/30'
+              )}
+            />
+          </button>
+        ))}
+        {rating > 0 && (
+          <span className="text-muted-foreground ml-1 text-[11px]">
+            {rating}/5
+          </span>
+        )}
+      </div>
+      <Textarea
+        placeholder="Share your feedback about this interview..."
+        rows={3}
+        className="resize-none text-[12px]"
+        value={feedbackText}
+        onChange={(e) => setFeedbackText(e.target.value)}
+      />
+      <Button
+        size="sm"
+        className="w-full text-[12px]"
+        disabled={rating === 0 || !feedbackText.trim() || submitFeedback.isPending}
+        onClick={() => {
+          submitFeedback.mutate(
+            { interviewId, rating, feedback: feedbackText.trim() },
+            {
+              onSuccess: () => {
+                toast.success('Feedback submitted')
+              },
+              onError: (error) => {
+                toast.error('Failed to submit feedback', {
+                  description: error.message,
+                })
+              },
+            }
+          )
+        }}
+      >
+        {submitFeedback.isPending ? 'Submitting...' : 'Submit Feedback'}
+      </Button>
+    </div>
+  )
 }
 
 export function InterviewDetailSheet() {
@@ -350,6 +427,50 @@ export function InterviewDetailSheet() {
                 </p>
               )}
             </div>
+
+            {/* Feedback — only for completed interviews */}
+            {interview.status === 'completed' && (
+              <>
+                <Separator />
+                <div>
+                  <h4 className="text-muted-foreground mb-3 text-[12px] font-semibold tracking-wider uppercase">
+                    Feedback
+                  </h4>
+                  {interview.rating !== null && interview.feedback ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((value) => (
+                          <Star
+                            key={value}
+                            size={16}
+                            variant={
+                              value <= (interview.rating ?? 0)
+                                ? 'Bold'
+                                : 'Linear'
+                            }
+                            className={cn(
+                              value <= (interview.rating ?? 0)
+                                ? 'text-amber-500'
+                                : 'text-muted-foreground/30'
+                            )}
+                          />
+                        ))}
+                        <span className="text-muted-foreground ml-1 text-[11px]">
+                          {interview.rating}/5
+                        </span>
+                      </div>
+                      <div className="bg-muted/50 rounded-xl p-3">
+                        <p className="text-muted-foreground text-[12px] leading-relaxed">
+                          {interview.feedback}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <InterviewFeedbackForm interviewId={interview.id} />
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
 

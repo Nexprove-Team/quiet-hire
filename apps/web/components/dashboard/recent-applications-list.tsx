@@ -37,9 +37,7 @@ export function RecentApplicationsList({
   applications,
 }: RecentApplicationsListProps) {
   const openCandidate = useCandidateSheet((s) => s.open)
-  const candidateIds = applications
-    .map((a) => a.candidateId)
-    .filter((id): id is string => id !== null)
+  const applicationIds = applications.map((a) => a.id)
 
   if (applications.length === 0) {
     return (
@@ -99,8 +97,7 @@ export function RecentApplicationsList({
             <button
               key={app.id}
               onClick={() =>
-                app.candidateId &&
-                openCandidate(app.candidateId, candidateIds)
+                openCandidate(app.id, applicationIds)
               }
               className="hover:bg-accent/50 flex w-full cursor-pointer items-center gap-3 rounded-lg p-2.5 text-left transition-colors"
             >

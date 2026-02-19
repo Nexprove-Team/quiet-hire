@@ -30,6 +30,16 @@ export const interviewScheduledSchema = z.object({
   notes: z.string().nullable().optional(),
 });
 
+export const recruiterEmailSchema = z.object({
+  candidateName: z.string(),
+  candidateEmail: z.email(),
+  recruiterName: z.string(),
+  recruiterEmail: z.email(),
+  companyName: z.string(),
+  subject: z.string(),
+  body: z.string(),
+});
+
 export const interviewReminderSchema = z.object({
   interviewId: z.string(),
   // Candidate

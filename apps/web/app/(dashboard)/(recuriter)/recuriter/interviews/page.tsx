@@ -4,10 +4,7 @@ import { useMemo } from 'react'
 import { motion } from 'motion/react'
 import { parseAsString, useQueryStates } from 'nuqs'
 import { useDebounce } from 'use-debounce'
-import {
-  ScheduleInterviewSheet,
-  useScheduleInterviewSheet,
-} from '@/components/dashboard/schedule-interview-sheet'
+import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
 import {
   Card,
   CardContent,
@@ -320,7 +317,7 @@ export default function InterviewsPage() {
               Manage and track all your candidate interviews
             </p>
           </div>
-          <Button className="gap-2 rounded-lg" onClick={openSchedule}>
+          <Button className="gap-2 rounded-lg" onClick={() => openSchedule()}>
             <Add size={16} variant="Linear" />
             Schedule Interview
           </Button>
@@ -461,7 +458,6 @@ export default function InterviewsPage() {
       </div>
 
       <InterviewDetailSheet />
-      <ScheduleInterviewSheet />
     </>
   )
 }

@@ -36,6 +36,13 @@
       "when": 1771456545060,
       "tag": "0004_daffy_black_crow",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1771538193255,
+      "tag": "0005_lonely_rhodey",
+      "breakpoints": true
     }
   ]
 }

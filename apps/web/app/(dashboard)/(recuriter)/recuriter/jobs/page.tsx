@@ -43,9 +43,12 @@ import {
   Clock,
   PauseCircle,
   CloseCircle,
+  Play,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
+import { toast } from 'sonner'
 import { useRecruiterJobs } from '@/hooks/use-recruiter-jobs'
+import { useUpdateJob } from '@/hooks/use-jobs'
 import type { RecruiterJobListItem } from '@/actions/recruiter-jobs'
 import { JOB_STATUS_CONFIG } from '@/lib/constants'
 import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
@@ -103,10 +106,12 @@ function JobRow({
   job,
   index,
   onDelete,
+  onTogglePause,
 }: {
   job: RecruiterJobListItem
   index: number
   onDelete: (job: { id: string; title: string }) => void
+  onTogglePause: (job: { id: string; status: string }) => void
 }) {
   const config = JOB_STATUS_CONFIG[job.status]
   const StatusIcon = STATUS_ICON[job.status] ?? Clock
@@ -196,6 +201,24 @@ function JobRow({
                 Edit
               </Link>
             </DropdownMenuItem>
+            {(job.status === 'open' || job.status === 'paused') && (
+              <DropdownMenuItem
+                className="gap-2 text-[13px]"
+                onClick={() => onTogglePause({ id: job.id, status: job.status })}
+              >
+                {job.status === 'open' ? (
+                  <>
+                    <PauseCircle size={14} variant="Linear" />
+                    Pause
+                  </>
+                ) : (
+                  <>
+                    <Play size={14} variant="Linear" />
+                    Resume
+                  </>
+                )}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem className="gap-2 text-[13px]">
               <Copy size={14} variant="Linear" />
               Duplicate
@@ -261,6 +284,20 @@ export default function JobsPage() {
     title: string
   } | null>(null)
   const { data: jobs, isLoading } = useRecruiterJobs()
+  const updateJob = useUpdateJob()
+
+  function handleTogglePause(job: { id: string; status: string }) {
+    const newStatus = job.status === 'open' ? 'paused' : 'open'
+    updateJob.mutate(
+      { id: job.id, status: newStatus as 'open' | 'paused' },
+      {
+        onSuccess: () =>
+          toast.success(newStatus === 'paused' ? 'Job paused' : 'Job resumed'),
+        onError: (err) =>
+          toast.error('Failed to update job', { description: err.message }),
+      }
+    )
+  }
 
   if (isLoading) return <JobsLoadingSkeleton />
 
@@ -413,6 +450,7 @@ export default function JobsPage() {
                     job={job}
                     index={i}
                     onDelete={setDeleteTarget}
+                    onTogglePause={handleTogglePause}
                   />
                 ))}
               </TableBody>

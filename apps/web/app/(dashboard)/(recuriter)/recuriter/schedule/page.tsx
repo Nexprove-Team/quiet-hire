@@ -33,10 +33,7 @@ import {
   InterviewDetailSheet,
   useInterviewSheet,
 } from '@/components/dashboard/interview-detail-sheet'
-import {
-  ScheduleInterviewSheet,
-  useScheduleInterviewSheet,
-} from '@/components/dashboard/schedule-interview-sheet'
+import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -365,7 +362,7 @@ export default function SchedulePage() {
               interviews
             </p>
           </div>
-          <Button className="gap-2 rounded-lg" onClick={openSchedule}>
+          <Button className="gap-2 rounded-lg" onClick={() => openSchedule()}>
             <Add size={16} variant="Linear" />
             Schedule Interview
           </Button>
@@ -661,7 +658,6 @@ export default function SchedulePage() {
       </div>
 
       <InterviewDetailSheet />
-      <ScheduleInterviewSheet />
     </>
   )
 }

@@ -64,6 +64,8 @@ export const interviews = pgTable("interviews", {
     .notNull()
     .default("screening"),
   notes: text("notes"),
+  feedback: text("feedback"),
+  rating: integer("rating"), // 1-5
 
   // Reminder tracking
   reminderSent: boolean("reminder_sent").notNull().default(false),

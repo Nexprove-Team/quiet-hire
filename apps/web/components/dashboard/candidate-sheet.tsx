@@ -2,10 +2,15 @@
 
 import { useState } from 'react'
 import { Sheet, SheetContent, SheetTitle } from '@hackhyre/ui/components/sheet'
-import { Avatar, AvatarFallback } from '@hackhyre/ui/components/avatar'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from '@hackhyre/ui/components/avatar'
 import { Badge } from '@hackhyre/ui/components/badge'
 import { Button } from '@hackhyre/ui/components/button'
 import { Separator } from '@hackhyre/ui/components/separator'
+import { Skeleton } from '@hackhyre/ui/components/skeleton'
 import {
   Tabs,
   TabsContent,
@@ -14,40 +19,39 @@ import {
 } from '@hackhyre/ui/components/tabs'
 import {
   Sms,
-  Call,
   Location,
   Calendar,
   Briefcase,
-  Flag,
-  Clock,
   LinkIcon,
   DocumentText,
   Star,
-  Messages,
   ArrowLeft,
   ArrowRight,
-  Cake,
-  Book,
+  Send,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
-import {
-  MOCK_CANDIDATES,
-  MOCK_APPLICATIONS,
-  type MockCandidateProfile,
-} from '@/lib/mock-data'
+import { useRecruiterCandidateDetail } from '@/hooks/use-recruiter-candidates'
+import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
+import { useComposeEmailSheet } from '@/components/dashboard/compose-email-sheet'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
+import type {
+  RecruiterCandidateDetail,
+  CandidateApplication,
+} from '@/actions/recruiter-candidates'
+
+// ── Info Item ────────────────────────────────────────────────────────
 
 function InfoItem({
   icon: Icon,
   label,
   value,
-  isLink,
+  href,
 }: {
   icon: typeof Sms
   label: string
   value: string
-  isLink?: boolean
+  href?: string
 }) {
   return (
     <div className="flex items-center gap-3 py-1.5">
@@ -59,141 +63,157 @@ function InfoItem({
       <span className="text-muted-foreground w-24 shrink-0 text-[12px]">
         {label}
       </span>
-      <span className="text-[12px] font-medium">
-        {isLink ? <span className="text-primary">{value}</span> : value}
+      <span className="min-w-0 truncate text-[12px] font-medium">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-primary hover:underline"
+          >
+            {value}
+          </a>
+        ) : (
+          value
+        )}
       </span>
     </div>
   )
 }
 
-function CvTab({ candidate }: { candidate: MockCandidateProfile }) {
+// ── CV Tab ───────────────────────────────────────────────────────────
+
+function CvTab({ candidate }: { candidate: RecruiterCandidateDetail }) {
   return (
     <div className="space-y-5 pt-4">
-      {/* Summary */}
-      <div>
-        <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
-          Profile
-        </h4>
-        <p className="text-muted-foreground text-[12px] leading-relaxed">
-          {candidate.summary}
-        </p>
-      </div>
-
-      <Separator />
-
-      {/* Work Experience */}
-      <div>
-        <h4 className="text-muted-foreground mb-3 text-[12px] font-semibold tracking-wider uppercase">
-          Experience
-        </h4>
-        <div className="space-y-4">
-          {candidate.workHistory.map((job, i) => (
-            <div key={i} className="border-muted relative border-l-2 pl-4">
-              <div className="bg-primary absolute top-1 -left-1.25 h-2 w-2 rounded-full" />
-              <div className="mb-1 flex items-center justify-between">
-                <p className="text-[13px] font-semibold">{job.role}</p>
-                <span className="text-muted-foreground text-[10px]">
-                  {job.period}
-                </span>
-              </div>
-              <p className="text-muted-foreground mb-2 text-[12px]">
-                {job.company}
-              </p>
-              <ul className="space-y-1">
-                {job.highlights.map((h, j) => (
-                  <li
-                    key={j}
-                    className="text-muted-foreground flex items-start gap-2 text-[11px]"
-                  >
-                    <span className="bg-muted-foreground/30 mt-1.5 h-1 w-1 shrink-0 rounded-full" />
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Education */}
-      <div>
-        <h4 className="text-muted-foreground mb-3 text-[12px] font-semibold tracking-wider uppercase">
-          Education
-        </h4>
-        <div className="space-y-3">
-          {candidate.education.map((edu, i) => (
-            <div key={i} className="flex items-start gap-3">
-              <div className="bg-muted flex h-8 w-8 shrink-0 items-center justify-center rounded-lg">
-                <Book
-                  size={14}
-                  variant="Bold"
-                  className="text-muted-foreground"
-                />
-              </div>
-              <div>
-                <p className="text-[12px] font-semibold">{edu.degree}</p>
-                <p className="text-muted-foreground text-[11px]">
-                  {edu.institution}
-                </p>
-                <p className="text-muted-foreground/60 text-[10px]">
-                  {edu.years}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
+      {/* Bio */}
+      {candidate.bio && (
+        <>
+          <div>
+            <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+              About
+            </h4>
+            <p className="text-muted-foreground text-[12px] leading-relaxed">
+              {candidate.bio}
+            </p>
+          </div>
+          <Separator />
+        </>
+      )}
 
       {/* Skills */}
+      {candidate.skills.length > 0 && (
+        <>
+          <div>
+            <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+              Skills
+            </h4>
+            <div className="flex flex-wrap gap-1.5">
+              {candidate.skills.map((skill) => (
+                <Badge
+                  key={skill}
+                  variant="secondary"
+                  className="px-2 py-0.5 text-[11px] font-medium"
+                >
+                  {skill}
+                </Badge>
+              ))}
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Social Links */}
+      {(candidate.linkedinUrl ||
+        candidate.githubUrl ||
+        candidate.twitterUrl ||
+        candidate.portfolioUrl) && (
+        <>
+          <div>
+            <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+              Links
+            </h4>
+            <div className="space-y-1">
+              {candidate.linkedinUrl && (
+                <InfoItem
+                  icon={LinkIcon}
+                  label="LinkedIn"
+                  value={candidate.linkedinUrl}
+                  href={candidate.linkedinUrl}
+                />
+              )}
+              {candidate.githubUrl && (
+                <InfoItem
+                  icon={LinkIcon}
+                  label="GitHub"
+                  value={candidate.githubUrl}
+                  href={candidate.githubUrl}
+                />
+              )}
+              {candidate.twitterUrl && (
+                <InfoItem
+                  icon={LinkIcon}
+                  label="Twitter"
+                  value={candidate.twitterUrl}
+                  href={candidate.twitterUrl}
+                />
+              )}
+              {candidate.portfolioUrl && (
+                <InfoItem
+                  icon={LinkIcon}
+                  label="Portfolio"
+                  value={candidate.portfolioUrl}
+                  href={candidate.portfolioUrl}
+                />
+              )}
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Resume */}
       <div>
         <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
-          Skills
+          Resume
         </h4>
-        <div className="flex flex-wrap gap-1.5">
-          {candidate.skills.map((skill) => (
-            <Badge
-              key={skill}
-              variant="secondary"
-              className="px-2 py-0.5 text-[11px] font-medium"
+        {candidate.resumeUrl ? (
+          <div className="space-y-2">
+            <div className="overflow-hidden rounded-lg border">
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(candidate.resumeUrl)}&embedded=true`}
+                className="h-[400px] w-full"
+                title="Resume"
+              />
+            </div>
+            <a
+              href={candidate.resumeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary inline-flex items-center gap-1 text-[11px] hover:underline"
             >
-              {skill}
-            </Badge>
-          ))}
-        </div>
-      </div>
-
-      <Separator />
-
-      {/* Languages */}
-      <div>
-        <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
-          Languages
-        </h4>
-        <div className="flex flex-wrap gap-1.5">
-          {candidate.languages.map((lang) => (
-            <Badge
-              key={lang}
-              variant="outline"
-              className="px-2 py-0.5 text-[11px] font-medium"
-            >
-              {lang}
-            </Badge>
-          ))}
-        </div>
+              <DocumentText size={12} variant="Linear" />
+              Open Resume
+            </a>
+          </div>
+        ) : (
+          <p className="text-muted-foreground/60 text-[12px]">
+            No resume uploaded
+          </p>
+        )}
       </div>
     </div>
   )
 }
 
-function AppliedJobsTab({ candidateId }: { candidateId: string }) {
-  const applications = MOCK_APPLICATIONS.filter(
-    (a) => a.candidateId === candidateId
-  )
+// ── Applied Jobs Tab ────────────────────────────────────────────────
 
+function AppliedJobsTab({
+  applications,
+}: {
+  applications: CandidateApplication[]
+}) {
   return (
     <div className="space-y-3 pt-4">
       {applications.length === 0 ? (
@@ -238,8 +258,28 @@ function AppliedJobsTab({ candidateId }: { candidateId: string }) {
   )
 }
 
+// ── Sheet ────────────────────────────────────────────────────────────
+
 const SHEET_CLASSES =
   'w-full sm:w-[480px] sm:max-w-[480px] p-0 flex flex-col inset-0 sm:inset-y-3 sm:right-3 sm:left-auto h-dvh sm:h-[calc(100dvh-1.5rem)] rounded-none sm:rounded-2xl border-0 sm:border'
+
+function CandidateSheetSkeleton() {
+  return (
+    <div className="space-y-4 px-6 py-5">
+      <div className="flex items-center gap-4">
+        <Skeleton className="h-14 w-14 rounded-full" />
+        <div className="space-y-2">
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="h-4 w-48" />
+        </div>
+      </div>
+      <Skeleton className="h-10 w-full" />
+      <Skeleton className="h-10 w-full" />
+      <Separator />
+      <Skeleton className="h-40 w-full" />
+    </div>
+  )
+}
 
 export function CandidateSheet() {
   const {
@@ -251,40 +291,17 @@ export function CandidateSheet() {
     navigatePrev,
   } = useCandidateSheet()
   const [activeTab, setActiveTab] = useState('cv')
+  const openCompose = useComposeEmailSheet((s) => s.open)
+  const openSchedule = useScheduleInterviewSheet((s) => s.open)
 
-  const candidate = candidateId
-    ? MOCK_CANDIDATES.find((c) => c.id === candidateId)
-    : null
+  const { data: candidate, isLoading } = useRecruiterCandidateDetail(
+    candidateId ?? ''
+  )
 
   const currentIndex = candidateId ? candidateIds.indexOf(candidateId) : -1
   const hasPrev = currentIndex > 0
   const hasNext = currentIndex >= 0 && currentIndex < candidateIds.length - 1
   const showNav = candidateIds.length > 1
-
-  if (!candidate) {
-    return (
-      <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
-        <SheetContent
-          side="right"
-          className={SHEET_CLASSES}
-          showCloseButton={false}
-        >
-          <SheetTitle className="sr-only">Candidate Details</SheetTitle>
-          <div className="flex h-full items-center justify-center">
-            <p className="text-muted-foreground text-[13px]">
-              Candidate not found
-            </p>
-          </div>
-        </SheetContent>
-      </Sheet>
-    )
-  }
-
-  const initials = candidate.name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && close()}>
@@ -349,120 +366,157 @@ export function CandidateSheet() {
           </div>
         </div>
 
-        {/* Header */}
-        <div className="shrink-0 border-b px-6 pt-3 pb-5">
-          <div className="flex items-start gap-4">
-            <Avatar className="h-14 w-14">
-              <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 className="truncate text-[16px] font-bold">
-                  {candidate.name}
-                </h2>
+        {/* Loading state */}
+        {isLoading && <CandidateSheetSkeleton />}
+
+        {/* Empty state */}
+        {!isLoading && !candidate && (
+          <div className="flex h-full items-center justify-center">
+            <p className="text-muted-foreground text-[13px]">
+              Candidate not found
+            </p>
+          </div>
+        )}
+
+        {/* Content */}
+        {!isLoading && candidate && (
+          <>
+            {/* Header */}
+            <div className="shrink-0 border-b px-6 pt-3 pb-5">
+              <div className="flex items-start gap-4">
+                <Avatar className="h-14 w-14">
+                  {candidate.image && (
+                    <AvatarImage src={candidate.image} alt={candidate.name} />
+                  )}
+                  <AvatarFallback className="bg-primary/10 text-primary text-lg font-bold">
+                    {candidate.name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .join('')
+                      .toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="truncate text-[16px] font-bold">
+                      {candidate.name}
+                    </h2>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 text-[12px]">
+                    {candidate.headline ?? 'Applicant'}
+                  </p>
+                  {candidate.linkedinUrl && (
+                    <a
+                      href={candidate.linkedinUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary mt-1 flex items-center gap-1 text-[11px] hover:underline"
+                    >
+                      <LinkIcon size={11} variant="Linear" />
+                      LinkedIn
+                    </a>
+                  )}
+                </div>
               </div>
-              <p className="text-muted-foreground mt-0.5 text-[12px]">
-                {candidate.title}
-              </p>
-              {candidate.linkedinUrl && (
-                <span className="text-primary mt-1 flex items-center gap-1 text-[11px]">
-                  <LinkIcon size={11} variant="Linear" />
-                  {candidate.linkedinUrl}
-                </span>
-              )}
-            </div>
-          </div>
 
-          {/* Action buttons */}
-          <div className="mt-4 flex gap-2">
-            <Button
-              size="sm"
-              className="flex-1 gap-2 rounded-lg text-[12px]"
-              disabled
-            >
-              <Sms size={14} variant="Bold" />
-              Send Email
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-1 gap-2 rounded-lg text-[12px]"
-              disabled
-            >
-              <Messages size={14} variant="Linear" />
-              Message
-            </Button>
-          </div>
-        </div>
-
-        {/* Scrollable body */}
-        <div className="min-h-0 flex-1 overflow-y-auto">
-          <div className="px-6 py-4">
-            {/* Personal Info */}
-            <div className="space-y-0.5">
-              <h3 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
-                Personal Information
-              </h3>
-              <InfoItem
-                icon={Cake}
-                label="Date of Birth"
-                value={candidate.dateOfBirth}
-              />
-              <InfoItem
-                icon={Flag}
-                label="Nationality"
-                value={candidate.nationality}
-              />
-              <InfoItem
-                icon={Briefcase}
-                label="Experience"
-                value={candidate.experience}
-              />
-              <InfoItem
-                icon={Location}
-                label="Location"
-                value={candidate.location}
-              />
-              <InfoItem
-                icon={Sms}
-                label="Email"
-                value={candidate.email}
-                isLink
-              />
-              <InfoItem
-                icon={Call}
-                label="Phone"
-                value={candidate.phone}
-                isLink
-              />
+              {/* Action buttons */}
+              <div className="mt-4 flex gap-2">
+                <Button
+                  size="sm"
+                  className="flex-1 gap-2 rounded-lg text-[12px]"
+                  onClick={() =>
+                    openCompose({
+                      to: candidate.email,
+                      candidateName: candidate.name,
+                    })
+                  }
+                >
+                  <Send size={14} variant="Bold" />
+                  Send Email
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 gap-2 rounded-lg text-[12px]"
+                  onClick={() =>
+                    openSchedule({
+                      candidateName: candidate.name,
+                      candidateEmail: candidate.email,
+                    })
+                  }
+                >
+                  <Calendar size={14} variant="Linear" />
+                  Schedule
+                </Button>
+              </div>
             </div>
 
-            <Separator className="my-4" />
+            {/* Scrollable body */}
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <div className="px-6 py-4">
+                {/* Personal Info */}
+                <div className="space-y-0.5">
+                  <h3 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+                    Personal Information
+                  </h3>
+                  <InfoItem
+                    icon={Sms}
+                    label="Email"
+                    value={candidate.email}
+                    href={`mailto:${candidate.email}`}
+                  />
+                  {candidate.location && (
+                    <InfoItem
+                      icon={Location}
+                      label="Location"
+                      value={candidate.location}
+                    />
+                  )}
+                  <InfoItem
+                    icon={Briefcase}
+                    label="Experience"
+                    value={
+                      candidate.experienceYears
+                        ? `${candidate.experienceYears} Years`
+                        : '—'
+                    }
+                  />
+                </div>
 
-            {/* Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full">
-                <TabsTrigger value="cv" className="flex-1 text-[12px]">
-                  <DocumentText size={13} variant="Linear" className="mr-1" />
-                  CV
-                </TabsTrigger>
-                <TabsTrigger value="applied" className="flex-1 text-[12px]">
-                  <Briefcase size={13} variant="Linear" className="mr-1" />
-                  Applied Jobs
-                </TabsTrigger>
-              </TabsList>
+                <Separator className="my-4" />
 
-              <TabsContent value="cv">
-                <CvTab candidate={candidate} />
-              </TabsContent>
-              <TabsContent value="applied">
-                <AppliedJobsTab candidateId={candidate.id} />
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
+                {/* Tabs */}
+                <Tabs value={activeTab} onValueChange={setActiveTab}>
+                  <TabsList className="w-full">
+                    <TabsTrigger value="cv" className="flex-1 text-[12px]">
+                      <DocumentText
+                        size={13}
+                        variant="Linear"
+                        className="mr-1"
+                      />
+                      CV
+                    </TabsTrigger>
+                    <TabsTrigger value="applied" className="flex-1 text-[12px]">
+                      <Briefcase
+                        size={13}
+                        variant="Linear"
+                        className="mr-1"
+                      />
+                      Applied Jobs
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="cv">
+                    <CvTab candidate={candidate} />
+                  </TabsContent>
+                  <TabsContent value="applied">
+                    <AppliedJobsTab applications={candidate.applications} />
+                  </TabsContent>
+                </Tabs>
+              </div>
+            </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   )

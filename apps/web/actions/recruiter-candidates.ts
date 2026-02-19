@@ -48,6 +48,7 @@ export interface RecruiterCandidateDetail {
   githubUrl: string | null
   twitterUrl: string | null
   portfolioUrl: string | null
+  resumeUrl: string | null
   image: string | null
   bestMatchScore: number
   matchAnalysis: {
@@ -301,6 +302,7 @@ export async function getRecruiterCandidateDetail(
     githubUrl: string | null
     twitterUrl: string | null
     portfolioUrl: string | null
+    resumeUrl: string | null
   } | null = null
   let userInfo: { name: string; image: string | null } | null = null
 
@@ -331,6 +333,7 @@ export async function getRecruiterCandidateDetail(
         githubUrl: profileRow.githubUrl,
         twitterUrl: profileRow.twitterUrl,
         portfolioUrl: profileRow.portfolioUrl,
+        resumeUrl: profileRow.resumeUrl,
       }
     }
     if (userRow) {
@@ -356,6 +359,13 @@ export async function getRecruiterCandidateDetail(
     createdAt: a.createdAt,
   }))
 
+  // Get resume URL from profile or best application
+  const resumeUrl =
+    profile?.resumeUrl ??
+    (bestApp?.resumeUrl as string | null) ??
+    candidateApps.find((a) => a.resumeUrl)?.resumeUrl ??
+    null
+
   return {
     name: userInfo?.name ?? anchorApp.candidateName,
     email: anchorApp.candidateEmail,
@@ -368,6 +378,7 @@ export async function getRecruiterCandidateDetail(
     githubUrl: profile?.githubUrl ?? null,
     twitterUrl: profile?.twitterUrl ?? null,
     portfolioUrl: profile?.portfolioUrl ?? null,
+    resumeUrl,
     image: userInfo?.image ?? null,
     bestMatchScore,
     matchAnalysis,

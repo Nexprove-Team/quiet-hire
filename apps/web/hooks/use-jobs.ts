@@ -14,6 +14,7 @@ import {
   deleteJob,
 } from '@/actions/job-mutations'
 import type { CreateJobInput, UpdateJobInput } from '@/actions/job-mutations'
+import { recruiterJobKeys } from '@/hooks/use-recruiter-jobs'
 
 export const jobKeys = {
   all: ['jobs'] as const,
@@ -89,6 +90,7 @@ export function useUpdateJob() {
     mutationFn: (input: UpdateJobInput) => updateJob(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: jobKeys.all })
+      queryClient.invalidateQueries({ queryKey: recruiterJobKeys.all })
     },
   })
 }

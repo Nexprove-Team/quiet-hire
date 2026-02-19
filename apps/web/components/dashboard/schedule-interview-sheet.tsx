@@ -52,17 +52,24 @@ import {
 
 // ── Store ────────────────────────────────────────────────────────────
 
+interface ScheduleInterviewPrefill {
+  candidateName?: string
+  candidateEmail?: string
+}
+
 interface ScheduleInterviewSheetState {
   isOpen: boolean
-  open: () => void
+  prefill: ScheduleInterviewPrefill | null
+  open: (prefill?: ScheduleInterviewPrefill) => void
   close: () => void
 }
 
 export const useScheduleInterviewSheet = create<ScheduleInterviewSheetState>(
   (set) => ({
     isOpen: false,
-    open: () => set({ isOpen: true }),
-    close: () => set({ isOpen: false }),
+    prefill: null,
+    open: (prefill) => set({ isOpen: true, prefill: prefill ?? null }),
+    close: () => set({ isOpen: false, prefill: null }),
   })
 )
 
@@ -87,7 +94,7 @@ const SHEET_CLASSES =
   'w-full sm:w-[480px] sm:max-w-[480px] p-0 flex flex-col inset-0 sm:inset-y-3 sm:right-3 sm:left-auto h-dvh sm:h-[calc(100dvh-1.5rem)] rounded-none sm:rounded-2xl border-0 sm:border'
 
 export function ScheduleInterviewSheet() {
-  const { isOpen, close } = useScheduleInterviewSheet()
+  const { isOpen, prefill, close } = useScheduleInterviewSheet()
   const { data: recruiterJobs } = useRecruiterJobs()
   const scheduleInterview = useScheduleInterview()
   const [googleConnected, setGoogleConnected] = useState<boolean | null>(null)
@@ -155,6 +162,14 @@ export function ScheduleInterviewSheet() {
       notes: '',
     },
   })
+
+  // Apply prefill when sheet opens with pre-filled data
+  useEffect(() => {
+    if (isOpen && prefill) {
+      if (prefill.candidateName) form.setValue('candidateName', prefill.candidateName)
+      if (prefill.candidateEmail) form.setValue('candidateEmail', prefill.candidateEmail)
+    }
+  }, [isOpen, prefill, form])
 
   function onSubmit(values: FormValues) {
     const scheduledAt = new Date(values.date)

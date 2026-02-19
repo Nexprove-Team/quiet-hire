@@ -1,6 +1,8 @@
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 import { CandidateSheet } from '@/components/dashboard/candidate-sheet'
+import { ScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
+import { ComposeEmailSheet } from '@/components/dashboard/compose-email-sheet'
 import { getSession } from '@/lib/auth-session'
 
 export default async function DashboardLayout({
@@ -17,6 +19,8 @@ export default async function DashboardLayout({
         <main className="flex-1 overflow-y-auto p-6">{children}</main>
       </div>
       <CandidateSheet />
+      <ScheduleInterviewSheet />
+      <ComposeEmailSheet />
     </div>
   )
 }

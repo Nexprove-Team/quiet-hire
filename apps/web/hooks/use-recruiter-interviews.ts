@@ -4,6 +4,7 @@ import {
   scheduleInterview,
   cancelInterview,
   rescheduleInterview,
+  submitInterviewFeedback,
 } from '@/actions/recruiter-interviews'
 import type { ScheduleInterviewInput } from '@/actions/recruiter-interviews'
 
@@ -33,6 +34,20 @@ export function useCancelInterview() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (interviewId: string) => cancelInterview(interviewId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: recruiterInterviewKeys.all })
+    },
+  })
+}
+
+export function useSubmitInterviewFeedback() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (input: {
+      interviewId: string
+      rating: number
+      feedback: string
+    }) => submitInterviewFeedback(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: recruiterInterviewKeys.all })
     },

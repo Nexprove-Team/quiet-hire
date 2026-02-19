@@ -29,6 +29,8 @@ import {
 import { cn } from '@hackhyre/ui/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useRecruiterCandidateDetail } from '@/hooks/use-recruiter-candidates'
+import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
+import { useComposeEmailSheet } from '@/components/dashboard/compose-email-sheet'
 import type { Icon } from '@hackhyre/ui/icons'
 
 // ── ScoreRing (96x96) ───────────────────────────────────────────────
@@ -147,6 +149,8 @@ export default function CandidateDetailPage({
 }) {
   const { id } = use(params)
   const { data: candidate, isLoading } = useRecruiterCandidateDetail(id)
+  const openSchedule = useScheduleInterviewSheet((s) => s.open)
+  const openCompose = useComposeEmailSheet((s) => s.open)
 
   if (isLoading) return <CandidateDetailSkeleton />
 
@@ -578,13 +582,27 @@ export default function CandidateDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button className="w-full gap-2 rounded-lg text-[13px]">
+                <Button
+                  className="w-full gap-2 rounded-lg text-[13px]"
+                  onClick={() =>
+                    openCompose({
+                      to: candidate.email,
+                      candidateName: candidate.name,
+                    })
+                  }
+                >
                   <Send size={14} variant="Linear" />
                   Send Email
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full gap-2 rounded-lg text-[13px]"
+                  onClick={() =>
+                    openSchedule({
+                      candidateName: candidate.name,
+                      candidateEmail: candidate.email,
+                    })
+                  }
                 >
                   <Calendar size={14} variant="Linear" />
                   Schedule Interview
