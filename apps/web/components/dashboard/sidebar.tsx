@@ -24,6 +24,7 @@ import {
 } from '@/lib/constants'
 import { Session, User } from '@hackhyre/db/auth'
 import { authClient } from '@/lib/auth-client'
+import { useSidebarCounts } from '@/hooks/use-sidebar-counts'
 
 function SidebarContent({
   isCollapsed,
@@ -35,6 +36,13 @@ function SidebarContent({
   const pathname = usePathname()
   const toggle = useSidebar((s) => s.toggle)
   const router = useRouter()
+  const { data: counts } = useSidebarCounts()
+
+  // Map real counts to nav item badges
+  const badgeMap: Record<string, number | undefined> = {
+    '/recuriter/jobs': counts?.activeJobs,
+    '/recuriter/applications': counts?.newApplications,
+  }
 
   const initials = user?.name
     .split(' ')
@@ -133,7 +141,7 @@ function SidebarContent({
             icon={item.icon}
             label={item.label}
             href={item.href}
-            badge={item.badge}
+            badge={badgeMap[item.href] ?? item.badge}
             isCollapsed={isCollapsed}
             isActive={
               item.href === '/'

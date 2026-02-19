@@ -151,6 +151,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@ai-sdk/elevenlabs':
+        specifier: ^2.0.20
+        version: 2.0.20(zod@4.3.6)
       '@ai-sdk/google':
         specifier: ^3.0.29
         version: 3.0.29(zod@4.3.6)
@@ -214,6 +217,9 @@ importers:
       nuqs:
         specifier: ^2.8.8
         version: 2.8.8(next@16.1.6(@opentelemetry/api@1.9.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react@19.2.4)
+      pnpm:
+        specifier: ^10.30.0
+        version: 10.30.0
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -617,6 +623,12 @@ importers:
         version: 5.9.3
 
 packages:
+
+  '@ai-sdk/elevenlabs@2.0.20':
+    resolution: {integrity: sha512-er+hlxKBNMP168sdAgzFkoH1sWNcJssg7SP7TMSWO3TjMrJmNgUsQpNMDSYzoaP6F+PlZwINaG/fkKz8h5SVuw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
 
   '@ai-sdk/gateway@3.0.50':
     resolution: {integrity: sha512-Jdd1a8VgbD7l7r+COj0h5SuaYRfPvOJ/AO6l0OrmTPEcI2MUQPr3C4JttfpNkcheEN+gOdy0CtZWuG17bW2fjw==}
@@ -6700,6 +6712,11 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
+  pnpm@10.30.0:
+    resolution: {integrity: sha512-K1dT3gFdSA7riPW1th4AUfBbQwGAioLsi4QMnSrfd0jrNSyD9cFZPKcD/xAXKVvD/dMRmruWhu/Ja5/LGCAJNw==}
+    engines: {node: '>=18.12'}
+    hasBin: true
+
   points-on-curve@0.2.0:
     resolution: {integrity: sha512-0mYKnYYe9ZcqMCWhUjItv/oHjvgEsfKvnUTg8sAtnHr3GVy7rGkXCb6d5cSyqrWqL4k81b9CPg3urd+T7aop3A==}
 
@@ -8045,6 +8062,12 @@ packages:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
+
+  '@ai-sdk/elevenlabs@2.0.20(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
+      zod: 4.3.6
 
   '@ai-sdk/gateway@3.0.50(zod@4.3.6)':
     dependencies:
@@ -14373,6 +14396,8 @@ snapshots:
       playwright-core: 1.58.2
     optionalDependencies:
       fsevents: 2.3.2
+
+  pnpm@10.30.0: {}
 
   points-on-curve@0.2.0: {}
 

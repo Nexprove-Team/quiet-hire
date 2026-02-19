@@ -1,12 +1,12 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { eq, asc } from 'drizzle-orm'
 import { db, companies } from '@hackhyre/db'
 
-export function createGetRecruiterCompanyTool(userId: string) {
+export function createGetRecruiterCompaniesTool(userId: string) {
   return tool({
     description:
-      "Look up the recruiter's company. Call this at the start of the job creation conversation to get the company details.",
+      "Look up all companies belonging to the recruiter. Call this at the start of the job creation conversation. The recruiter may have multiple companies (e.g., agency recruiters hiring for clients).",
     inputSchema: z.object({}),
     execute: async () => {
       const rows = await db
@@ -18,13 +18,13 @@ export function createGetRecruiterCompanyTool(userId: string) {
         })
         .from(companies)
         .where(eq(companies.createdBy, userId))
-        .limit(1)
+        .orderBy(asc(companies.createdAt))
 
       if (rows.length === 0) {
-        return { found: false, company: null }
+        return { found: false, companies: [] }
       }
 
-      return { found: true, company: rows[0]! }
+      return { found: true, companies: rows }
     },
   })
 }

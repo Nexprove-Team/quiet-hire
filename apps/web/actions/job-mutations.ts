@@ -1,6 +1,6 @@
 'use server'
 
-import { eq, and, isNull } from 'drizzle-orm'
+import { eq, and, asc, isNull } from 'drizzle-orm'
 import { db, jobs, companies } from '@hackhyre/db'
 import { getSession } from '@/lib/auth-session'
 import { generateSlug } from '@/lib/slug'
@@ -10,6 +10,7 @@ import { generateSlug } from '@/lib/slug'
 export interface CreateJobInput {
   title: string
   description: string
+  companyId?: string
   employmentType?: 'full_time' | 'part_time' | 'contract' | 'internship'
   experienceLevel?: 'entry' | 'mid' | 'senior' | 'lead' | 'executive'
   location?: string
@@ -48,12 +49,12 @@ async function requireAuth() {
   return session.user.id
 }
 
-// ── getRecruiterCompany ────────────────────────────────────────────────────────
+// ── getRecruiterCompanies ──────────────────────────────────────────────────────
 
-export async function getRecruiterCompany() {
+export async function getRecruiterCompanies() {
   const userId = await requireAuth()
 
-  const rows = await db
+  return db
     .select({
       id: companies.id,
       name: companies.name,
@@ -62,9 +63,34 @@ export async function getRecruiterCompany() {
     })
     .from(companies)
     .where(eq(companies.createdBy, userId))
-    .limit(1)
+    .orderBy(asc(companies.createdAt))
+}
 
-  return rows[0] ?? null
+// ── createCompany ─────────────────────────────────────────────────────────────
+
+export async function createCompany(input: {
+  name: string
+  website?: string
+  description?: string
+}) {
+  const userId = await requireAuth()
+
+  const [row] = await db
+    .insert(companies)
+    .values({
+      name: input.name,
+      website: input.website ?? null,
+      description: input.description ?? null,
+      createdBy: userId,
+    })
+    .returning({
+      id: companies.id,
+      name: companies.name,
+      website: companies.website,
+      logoUrl: companies.logoUrl,
+    })
+
+  return row!
 }
 
 // ── createJob ──────────────────────────────────────────────────────────────────
@@ -72,14 +98,32 @@ export async function getRecruiterCompany() {
 export async function createJob(input: CreateJobInput) {
   const userId = await requireAuth()
 
-  const company = await db
-    .select({ id: companies.id })
-    .from(companies)
-    .where(eq(companies.createdBy, userId))
-    .limit(1)
+  let companyId = input.companyId
 
-  if (!company[0]) {
-    throw new Error('No company found. Please complete onboarding first.')
+  if (companyId) {
+    // Verify the recruiter owns this company
+    const owned = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(and(eq(companies.id, companyId), eq(companies.createdBy, userId)))
+      .limit(1)
+
+    if (!owned[0]) {
+      throw new Error('Company not found or not owned by you.')
+    }
+  } else {
+    // Fall back to recruiter's first company
+    const rows = await db
+      .select({ id: companies.id })
+      .from(companies)
+      .where(eq(companies.createdBy, userId))
+      .orderBy(asc(companies.createdAt))
+      .limit(1)
+
+    if (!rows[0]) {
+      throw new Error('No company found. Please complete onboarding first.')
+    }
+    companyId = rows[0].id
   }
 
   const status = input.status ?? 'draft'
@@ -91,7 +135,7 @@ export async function createJob(input: CreateJobInput) {
       title: input.title,
       slug: generateSlug(input.title),
       description: input.description,
-      companyId: company[0].id,
+      companyId,
       recruiterId: userId,
       status,
       employmentType: input.employmentType ?? 'full_time',

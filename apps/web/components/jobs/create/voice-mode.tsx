@@ -28,6 +28,7 @@ import { JobPreview } from './job-preview'
 import { VOICE_AI_SCRIPT } from '@/lib/mock-data'
 
 interface ConstructedJob {
+  companyId?: string
   title?: string
   description?: string
   employmentType?: string
@@ -263,7 +264,7 @@ export function VoiceMode() {
           </CardHeader>
 
           <CardContent className="flex-1 px-4">
-            <ScrollArea className="h-[400px] pr-4" ref={scrollRef}>
+            <ScrollArea className="h-100 pr-4" ref={scrollRef}>
               <div className="space-y-4 py-2">
                 {messages.map((msg) => (
                   <VoiceChatBubble key={msg.id} message={msg} />

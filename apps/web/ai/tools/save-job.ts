@@ -1,14 +1,20 @@
 import { tool } from 'ai'
 import { z } from 'zod'
-import { eq } from 'drizzle-orm'
+import { eq, and, asc } from 'drizzle-orm'
 import { db, jobs, companies } from '@hackhyre/db'
 import { generateSlug } from '@/lib/slug'
 
 export function createSaveJobTool(userId: string) {
   return tool({
     description:
-      'Save a job listing to the database. Call this after the user has confirmed the job details. The job will be associated with the recruiter\'s company.',
+      'Save a job listing to the database. Call this after the user has confirmed the job details. If the recruiter has multiple companies, pass the companyId they selected.',
     inputSchema: z.object({
+      companyId: z
+        .string()
+        .optional()
+        .describe(
+          'ID of the company to post the job under. If omitted, defaults to the recruiter\'s first company.'
+        ),
       title: z.string().describe('Job title'),
       description: z.string().describe('Full job description'),
       employmentType: z
@@ -31,19 +37,42 @@ export function createSaveJobTool(userId: string) {
         .describe("'draft' to save for review, 'open' to publish immediately"),
     }),
     execute: async (input) => {
-      const companyRows = await db
-        .select({ id: companies.id })
-        .from(companies)
-        .where(eq(companies.createdBy, userId))
-        .limit(1)
+      let companyId = input.companyId
 
-      if (!companyRows[0]) {
-        return {
-          success: false,
-          message: 'No company found. The recruiter must complete onboarding first.',
-          jobId: null,
-          slug: null,
+      if (companyId) {
+        // Verify the recruiter owns this company
+        const owned = await db
+          .select({ id: companies.id })
+          .from(companies)
+          .where(and(eq(companies.id, companyId), eq(companies.createdBy, userId)))
+          .limit(1)
+
+        if (!owned[0]) {
+          return {
+            success: false,
+            message: 'Company not found or not owned by you.',
+            jobId: null,
+            slug: null,
+          }
         }
+      } else {
+        // Fall back to recruiter's first company
+        const companyRows = await db
+          .select({ id: companies.id })
+          .from(companies)
+          .where(eq(companies.createdBy, userId))
+          .orderBy(asc(companies.createdAt))
+          .limit(1)
+
+        if (!companyRows[0]) {
+          return {
+            success: false,
+            message: 'No company found. The recruiter must complete onboarding first.',
+            jobId: null,
+            slug: null,
+          }
+        }
+        companyId = companyRows[0].id
       }
 
       const now = new Date()
@@ -54,7 +83,7 @@ export function createSaveJobTool(userId: string) {
           title: input.title,
           slug: generateSlug(input.title),
           description: input.description,
-          companyId: companyRows[0].id,
+          companyId,
           recruiterId: userId,
           status: input.status,
           employmentType: input.employmentType,

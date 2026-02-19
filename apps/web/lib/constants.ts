@@ -20,17 +20,16 @@ export interface NavItem {
 
 export const SIDEBAR_NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/recuriter/dashboard', icon: Home },
-  { label: 'Jobs', href: '/recuriter/jobs', icon: Briefcase, badge: 3 },
+  { label: 'Jobs', href: '/recuriter/jobs', icon: Briefcase },
   { label: 'Candidates', href: '/recuriter/candidates', icon: People },
   {
     label: 'Applications',
     href: '/recuriter/applications',
     icon: DocumentText,
-    badge: 12,
   },
   { label: 'Interviews', href: '/recuriter/interviews', icon: Calendar },
   { label: 'Schedule', href: '/recuriter/schedule', icon: Clock },
-  { label: 'Analytics', href: '/recuriter/analytics', icon: Chart, isDisabled: true },
+  { label: 'Analytics', href: '/recuriter/analytics', icon: Chart },
 ]
 
 export const SIDEBAR_BOTTOM_ITEMS: NavItem[] = [

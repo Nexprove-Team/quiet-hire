@@ -10,7 +10,7 @@ export default async function DashboardLayout({
 }) {
   const session = await getSession()
   return (
-    <div className="flex h-svh overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       <Sidebar session={session} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <Header />
