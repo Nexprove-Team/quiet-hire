@@ -6,6 +6,10 @@ on:
     pull_request:
         branches: ["main"]
 
+permissions:
+    contents: read
+    pull-requests: write
+
 jobs:
     react-doctor:
         runs-on: ubuntu-latest
@@ -25,6 +29,8 @@ jobs:
 
             - name: Run React Doctor
               id: doctor
+              env:
+                  NO_COLOR: "1"
               run: |
                   echo "=== apps/web ===" | tee react-doctor-report.txt
                   npx -y react-doctor@latest apps/web --verbose 2>&1 | tee -a react-doctor-report.txt || true
