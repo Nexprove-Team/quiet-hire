@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import { Sheet, SheetContent, SheetTitle } from '@hackhyre/ui/components/sheet'
 import { Avatar, AvatarFallback } from '@hackhyre/ui/components/avatar'
 import { Badge } from '@hackhyre/ui/components/badge'
@@ -12,7 +12,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@hackhyre/ui/components/tabs'
-import { Input } from '@hackhyre/ui/components/input'
 import {
   Sms,
   Call,
@@ -29,17 +28,13 @@ import {
   ArrowRight,
   Cake,
   Book,
-  Send,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
 import {
   MOCK_CANDIDATES,
   MOCK_APPLICATIONS,
-  MOCK_MESSAGES,
-  MOCK_USER,
   type MockCandidateProfile,
-  type MockMessage,
 } from '@/lib/mock-data'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 
@@ -243,203 +238,6 @@ function AppliedJobsTab({ candidateId }: { candidateId: string }) {
   )
 }
 
-function formatMessageTime(timestamp: string) {
-  const date = new Date(timestamp)
-  const now = new Date('2026-02-09T00:00:00')
-  const diffMs = now.getTime() - date.getTime()
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24))
-
-  const time = date.toLocaleTimeString('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-  })
-
-  if (diffDays === 0) return `Today ${time}`
-  if (diffDays === 1) return `Yesterday ${time}`
-  return `${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} ${time}`
-}
-
-function MessagesTab({
-  candidateId,
-  candidateName,
-}: {
-  candidateId: string
-  candidateName: string
-}) {
-  const [messages, setMessages] = useState<MockMessage[]>(() =>
-    MOCK_MESSAGES.filter((m) => m.candidateId === candidateId)
-  )
-  const [draft, setDraft] = useState('')
-  const bottomRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages.length])
-
-  useEffect(() => {
-    setMessages(MOCK_MESSAGES.filter((m) => m.candidateId === candidateId))
-    setDraft('')
-  }, [candidateId])
-
-  const handleSend = () => {
-    const text = draft.trim()
-    if (!text) return
-    const newMsg: MockMessage = {
-      id: `msg-local-${Date.now()}`,
-      candidateId,
-      sender: 'recruiter',
-      text,
-      timestamp: new Date().toISOString(),
-    }
-    setMessages((prev) => [...prev, newMsg])
-    setDraft('')
-  }
-
-  const candidateInitials = candidateName
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-
-  return (
-    <div className="-mx-6 -mb-4 flex flex-col pt-3">
-      {/* Messages list */}
-      <div className="flex-1 space-y-3 px-6 pb-3">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center py-10 text-center">
-            <Messages
-              size={32}
-              variant="Linear"
-              className="text-muted-foreground/30 mb-2"
-            />
-            <p className="text-muted-foreground text-[12px]">No messages yet</p>
-            <p className="text-muted-foreground/60 mt-0.5 text-[11px]">
-              Start the conversation below
-            </p>
-          </div>
-        ) : (
-          messages.map((msg) => {
-            const isRecruiter = msg.sender === 'recruiter'
-            return (
-              <div
-                key={msg.id}
-                className={cn(
-                  'flex gap-2.5',
-                  isRecruiter ? 'flex-row-reverse' : 'flex-row'
-                )}
-              >
-                <Avatar className="mt-0.5 h-6 w-6 shrink-0">
-                  <AvatarFallback
-                    className={cn(
-                      'text-[9px] font-bold',
-                      isRecruiter
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground'
-                    )}
-                  >
-                    {isRecruiter
-                      ? MOCK_USER.name
-                          .split(' ')
-                          .map((n) => n[0])
-                          .join('')
-                      : candidateInitials}
-                  </AvatarFallback>
-                </Avatar>
-                <div
-                  className={cn(
-                    'max-w-[75%] space-y-1',
-                    isRecruiter ? 'items-end' : 'items-start'
-                  )}
-                >
-                  <div
-                    className={cn(
-                      'rounded-2xl px-3 py-2 text-[12px] leading-relaxed',
-                      isRecruiter
-                        ? 'bg-primary text-primary-foreground rounded-tr-sm'
-                        : 'bg-muted rounded-tl-sm'
-                    )}
-                  >
-                    {msg.text}
-                  </div>
-                  <p
-                    className={cn(
-                      'text-muted-foreground/60 px-1 text-[9px]',
-                      isRecruiter ? 'text-right' : 'text-left'
-                    )}
-                  >
-                    {formatMessageTime(msg.timestamp)}
-                  </p>
-                </div>
-              </div>
-            )
-          })
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Compose bar */}
-      <div className="shrink-0 border-t px-4 py-3">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault()
-            handleSend()
-          }}
-          className="flex items-center gap-2"
-        >
-          <Input
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Type a message..."
-            className="bg-muted/50 focus-visible:bg-background h-9 flex-1 rounded-lg border-0 text-[12px]"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="h-9 w-9 shrink-0 rounded-lg"
-            disabled={!draft.trim()}
-          >
-            <Send size={14} variant="Bold" />
-          </Button>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-function ActivityTab() {
-  const activities = [
-    { action: 'Application submitted', time: '2 days ago', type: 'submit' },
-    {
-      action: 'Resume reviewed by recruiter',
-      time: '1 day ago',
-      type: 'review',
-    },
-    { action: 'Moved to under review', time: '1 day ago', type: 'status' },
-    { action: 'Interview scheduled', time: '5 hours ago', type: 'interview' },
-  ]
-
-  return (
-    <div className="space-y-3 pt-4">
-      {activities.map((activity, i) => (
-        <div key={i} className="flex items-start gap-3">
-          <div className="bg-muted mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
-            <Clock
-              size={12}
-              variant="Linear"
-              className="text-muted-foreground"
-            />
-          </div>
-          <div>
-            <p className="text-[12px] font-medium">{activity.action}</p>
-            <p className="text-muted-foreground text-[10px]">{activity.time}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 const SHEET_CLASSES =
   'w-full sm:w-[480px] sm:max-w-[480px] p-0 flex flex-col inset-0 sm:inset-y-3 sm:right-3 sm:left-auto h-dvh sm:h-[calc(100dvh-1.5rem)] rounded-none sm:rounded-2xl border-0 sm:border'
 
@@ -579,7 +377,11 @@ export function CandidateSheet() {
 
           {/* Action buttons */}
           <div className="mt-4 flex gap-2">
-            <Button size="sm" className="flex-1 gap-2 rounded-lg text-[12px]">
+            <Button
+              size="sm"
+              className="flex-1 gap-2 rounded-lg text-[12px]"
+              disabled
+            >
               <Sms size={14} variant="Bold" />
               Send Email
             </Button>
@@ -587,7 +389,7 @@ export function CandidateSheet() {
               variant="outline"
               size="sm"
               className="flex-1 gap-2 rounded-lg text-[12px]"
-              onClick={() => setActiveTab('messages')}
+              disabled
             >
               <Messages size={14} variant="Linear" />
               Message
@@ -650,14 +452,6 @@ export function CandidateSheet() {
                   <Briefcase size={13} variant="Linear" className="mr-1" />
                   Applied Jobs
                 </TabsTrigger>
-                <TabsTrigger value="messages" className="flex-1 text-[12px]">
-                  <Messages size={13} variant="Linear" className="mr-1" />
-                  Messages
-                </TabsTrigger>
-                <TabsTrigger value="activity" className="flex-1 text-[12px]">
-                  <Clock size={13} variant="Linear" className="mr-1" />
-                  Activity
-                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="cv">
@@ -665,15 +459,6 @@ export function CandidateSheet() {
               </TabsContent>
               <TabsContent value="applied">
                 <AppliedJobsTab candidateId={candidate.id} />
-              </TabsContent>
-              <TabsContent value="messages">
-                <MessagesTab
-                  candidateId={candidate.id}
-                  candidateName={candidate.name}
-                />
-              </TabsContent>
-              <TabsContent value="activity">
-                <ActivityTab />
               </TabsContent>
             </Tabs>
           </div>

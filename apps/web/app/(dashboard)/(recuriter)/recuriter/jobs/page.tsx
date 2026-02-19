@@ -48,6 +48,7 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { useRecruiterJobs } from '@/hooks/use-recruiter-jobs'
 import type { RecruiterJobListItem } from '@/actions/recruiter-jobs'
 import { JOB_STATUS_CONFIG } from '@/lib/constants'
+import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
 
 type JobStatus = 'draft' | 'open' | 'paused' | 'filled'
 
@@ -98,7 +99,15 @@ function formatEmploymentType(type: string) {
     .join(' ')
 }
 
-function JobRow({ job, index }: { job: RecruiterJobListItem; index: number }) {
+function JobRow({
+  job,
+  index,
+  onDelete,
+}: {
+  job: RecruiterJobListItem
+  index: number
+  onDelete: (job: { id: string; title: string }) => void
+}) {
   const config = JOB_STATUS_CONFIG[job.status]
   const StatusIcon = STATUS_ICON[job.status] ?? Clock
 
@@ -181,15 +190,20 @@ function JobRow({ job, index }: { job: RecruiterJobListItem; index: number }) {
                 View Details
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuItem className="gap-2 text-[13px]">
-              <Edit size={14} variant="Linear" />
-              Edit
+            <DropdownMenuItem className="gap-2 text-[13px]" asChild>
+              <Link href={`/recuriter/jobs/${job.id}/edit`}>
+                <Edit size={14} variant="Linear" />
+                Edit
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuItem className="gap-2 text-[13px]">
               <Copy size={14} variant="Linear" />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive focus:text-destructive gap-2 text-[13px]">
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive gap-2 text-[13px]"
+              onClick={() => onDelete({ id: job.id, title: job.title })}
+            >
               <Trash size={14} variant="Linear" />
               Delete
             </DropdownMenuItem>
@@ -242,6 +256,10 @@ function JobsLoadingSkeleton() {
 export default function JobsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'all'>('all')
+  const [deleteTarget, setDeleteTarget] = useState<{
+    id: string
+    title: string
+  } | null>(null)
   const { data: jobs, isLoading } = useRecruiterJobs()
 
   if (isLoading) return <JobsLoadingSkeleton />
@@ -390,13 +408,27 @@ export default function JobsPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((job, i) => (
-                  <JobRow key={job.id} job={job} index={i} />
+                  <JobRow
+                    key={job.id}
+                    job={job}
+                    index={i}
+                    onDelete={setDeleteTarget}
+                  />
                 ))}
               </TableBody>
             </Table>
           )}
         </CardContent>
       </Card>
+
+      {deleteTarget && (
+        <DeleteJobDialog
+          jobId={deleteTarget.id}
+          jobTitle={deleteTarget.title}
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+        />
+      )}
     </div>
   )
 }

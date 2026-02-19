@@ -1,7 +1,7 @@
 'use server'
 
 import { eq, and, desc, isNull, inArray } from 'drizzle-orm'
-import { db, jobs, applications, candidateProfiles, user } from '@hackhyre/db'
+import { db, jobs, applications, user } from '@hackhyre/db'
 import { getSession } from '@/lib/auth-session'
 
 export type ApplicationStatus =
@@ -85,4 +85,42 @@ export async function getRecruiterApplications(): Promise<
     relevanceScore: app.relevanceScore,
     createdAt: app.createdAt,
   }))
+}
+
+// ── updateApplicationStatus ─────────────────────────────────────────────────
+
+export async function updateApplicationStatus(input: {
+  applicationId: string
+  status: ApplicationStatus
+}) {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const recruiterId = session.user.id
+
+  // Fetch the application
+  const [app] = await db
+    .select({ id: applications.id, jobId: applications.jobId })
+    .from(applications)
+    .where(eq(applications.id, input.applicationId))
+    .limit(1)
+
+  if (!app) throw new Error('Application not found')
+
+  // Verify the recruiter owns the job
+  const [job] = await db
+    .select({ id: jobs.id, recruiterId: jobs.recruiterId })
+    .from(jobs)
+    .where(and(eq(jobs.id, app.jobId), isNull(jobs.deletedAt)))
+    .limit(1)
+
+  if (!job) throw new Error('Job not found')
+  if (job.recruiterId !== recruiterId) throw new Error('Forbidden')
+
+  await db
+    .update(applications)
+    .set({ status: input.status, updatedAt: new Date() })
+    .where(eq(applications.id, input.applicationId))
+
+  return { id: input.applicationId, status: input.status }
 }

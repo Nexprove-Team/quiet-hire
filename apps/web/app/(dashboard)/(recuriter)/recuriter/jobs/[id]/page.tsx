@@ -38,6 +38,8 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { JOB_STATUS_CONFIG, APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
 import { useRecruiterJobDetail } from '@/hooks/use-recruiter-jobs'
+import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
+import { ApplicationStatusSelect } from '@/components/applications/status-select'
 import { Streamdown } from 'streamdown'
 
 const STATUS_ICON: Record<string, typeof TickCircle> = {
@@ -202,18 +204,28 @@ export default function JobDetailPage(
             variant="outline"
             size="sm"
             className="gap-2 rounded-lg text-[13px]"
+            asChild
           >
-            <Edit size={14} variant="Linear" />
-            Edit
+            <Link href={`/recuriter/jobs/${id}/edit`}>
+              <Edit size={14} variant="Linear" />
+              Edit
+            </Link>
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive gap-2 rounded-lg text-[13px]"
-          >
-            <Trash size={14} variant="Linear" />
-            Delete
-          </Button>
+          <DeleteJobDialog
+            jobId={id}
+            jobTitle={job.title}
+            redirectAfterDelete
+            trigger={
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-destructive hover:text-destructive gap-2 rounded-lg text-[13px]"
+              >
+                <Trash size={14} variant="Linear" />
+                Delete
+              </Button>
+            }
+          />
         </div>
       </div>
 
@@ -424,7 +436,6 @@ export default function JobDetailPage(
                 ) : (
                   <div className="space-y-1">
                     {jobApplications.map((app, i) => {
-                      const appConfig = APPLICATION_STATUS_CONFIG[app.status]
                       const initials = app.candidateName
                         .split(' ')
                         .map((n) => n[0])
@@ -456,15 +467,12 @@ export default function JobDetailPage(
                               {app.candidateEmail}
                             </p>
                           </div>
-                          <Badge
-                            variant={appConfig?.variant as 'default'}
-                            className={cn(
-                              'shrink-0 text-[9px] font-medium',
-                              appConfig?.className
-                            )}
-                          >
-                            {appConfig?.label}
-                          </Badge>
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <ApplicationStatusSelect
+                              applicationId={app.id}
+                              currentStatus={app.status}
+                            />
+                          </div>
                         </motion.button>
                       )
                     })}

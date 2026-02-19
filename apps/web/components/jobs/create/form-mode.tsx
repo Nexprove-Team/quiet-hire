@@ -7,9 +7,9 @@ import { z } from 'zod/v4'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 
-import { useCreateJob } from '@/hooks/use-jobs'
+import { useCreateJob, useUpdateJob } from '@/hooks/use-jobs'
 import { useRecruiterCompanies, useCreateCompany } from '@/hooks/use-companies'
-import type { CreateJobInput } from '@/actions/job-mutations'
+import type { CreateJobInput, UpdateJobInput } from '@/actions/job-mutations'
 
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -73,78 +73,117 @@ type FormValues = z.infer<typeof schema>
 
 const NEW_COMPANY_VALUE = '__new__'
 
-export function FormMode() {
+const DEFAULTS: FormValues = {
+  companyId: undefined,
+  newCompanyName: '',
+  newCompanyWebsite: '',
+  newCompanyDescription: '',
+  title: '',
+  description: '',
+  employmentType: 'full_time',
+  experienceLevel: 'mid',
+  location: '',
+  isRemote: false,
+  salaryMin: undefined,
+  salaryMax: undefined,
+  salaryCurrency: 'USD',
+  requirements: [],
+  responsibilities: [],
+  skills: [],
+}
+
+interface FormModeProps {
+  mode?: 'create' | 'edit'
+  jobId?: string
+  initialValues?: Partial<FormValues>
+}
+
+export function FormMode({
+  mode = 'create',
+  jobId,
+  initialValues,
+}: FormModeProps) {
   const router = useRouter()
-  const { mutateAsync, isPending: isSubmitting } = useCreateJob()
+  const isEdit = mode === 'edit'
+  const { mutateAsync: createAsync, isPending: isCreating } = useCreateJob()
+  const { mutateAsync: updateAsync, isPending: isUpdating } = useUpdateJob()
+  const isSubmitting = isCreating || isUpdating
   const { data: companiesList, isLoading: companiesLoading } =
     useRecruiterCompanies()
   const { mutateAsync: createCompanyAsync } = useCreateCompany()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: {
-      companyId: undefined,
-      newCompanyName: '',
-      newCompanyWebsite: '',
-      newCompanyDescription: '',
-      title: '',
-      description: '',
-      employmentType: 'full_time',
-      experienceLevel: 'mid',
-      location: '',
-      isRemote: false,
-      salaryMin: undefined,
-      salaryMax: undefined,
-      salaryCurrency: 'USD',
-      requirements: [],
-      responsibilities: [],
-      skills: [],
-    },
+    defaultValues: { ...DEFAULTS, ...initialValues },
   })
 
-  // Pre-select the first company once loaded
+  // Pre-select the first company once loaded (create mode only)
   const companyIdValue = form.watch('companyId')
   useEffect(() => {
-    if (!companyIdValue && companiesList?.length) {
+    if (!isEdit && !companyIdValue && companiesList?.length) {
       form.setValue('companyId', companiesList[0]!.id)
     }
-  }, [companiesList, companyIdValue, form])
+  }, [companiesList, companyIdValue, form, isEdit])
 
   const watchedValues = form.watch()
 
   async function onSubmit(values: FormValues, asDraft = false) {
     try {
-      let companyId = values.companyId
-
-      // Create new company if needed
-      if (companyId === NEW_COMPANY_VALUE) {
-        if (!values.newCompanyName?.trim()) {
-          toast.error('Company name is required')
-          return
-        }
-        const newCompany = await createCompanyAsync({
-          name: values.newCompanyName.trim(),
-          website: values.newCompanyWebsite?.trim() || undefined,
-          description: values.newCompanyDescription?.trim() || undefined,
+      if (isEdit) {
+        await updateAsync({
+          id: jobId!,
+          title: values.title,
+          description: values.description,
+          employmentType:
+            values.employmentType as UpdateJobInput['employmentType'],
+          experienceLevel:
+            values.experienceLevel as UpdateJobInput['experienceLevel'],
+          location: values.location || null,
+          isRemote: values.isRemote,
+          salaryMin: values.salaryMin ?? null,
+          salaryMax: values.salaryMax ?? null,
+          salaryCurrency: values.salaryCurrency,
+          requirements: values.requirements,
+          responsibilities: values.responsibilities,
+          skills: values.skills,
         })
-        companyId = newCompany.id
-      }
+        toast.success('Job updated!', {
+          description: `"${values.title}" has been updated.`,
+        })
+        router.push(`/recuriter/jobs/${jobId}`)
+      } else {
+        let companyId = values.companyId
 
-      await mutateAsync({
-        ...values,
-        companyId,
-        employmentType:
-          values.employmentType as CreateJobInput['employmentType'],
-        experienceLevel:
-          values.experienceLevel as CreateJobInput['experienceLevel'],
-        status: asDraft ? 'draft' : 'open',
-      })
-      toast.success(asDraft ? 'Draft saved!' : 'Job published!', {
-        description: `"${values.title}" has been ${asDraft ? 'saved as a draft' : 'published'}.`,
-      })
-      router.push('/recuriter/jobs')
+        // Create new company if needed
+        if (companyId === NEW_COMPANY_VALUE) {
+          if (!values.newCompanyName?.trim()) {
+            toast.error('Company name is required')
+            return
+          }
+          const newCompany = await createCompanyAsync({
+            name: values.newCompanyName.trim(),
+            website: values.newCompanyWebsite?.trim() || undefined,
+            description: values.newCompanyDescription?.trim() || undefined,
+          })
+          companyId = newCompany.id
+        }
+
+        await createAsync({
+          ...values,
+          companyId,
+          employmentType:
+            values.employmentType as CreateJobInput['employmentType'],
+          experienceLevel:
+            values.experienceLevel as CreateJobInput['experienceLevel'],
+          status: asDraft ? 'draft' : 'open',
+        })
+        toast.success(asDraft ? 'Draft saved!' : 'Job published!', {
+          description: `"${values.title}" has been ${asDraft ? 'saved as a draft' : 'published'}.`,
+        })
+        router.push('/recuriter/jobs')
+      }
     } catch (error) {
-      toast.error('Failed to create job', {
+      toast.error(isEdit ? 'Failed to update job' : 'Failed to create job', {
         description:
           error instanceof Error ? error.message : 'Something went wrong',
       })
@@ -218,7 +257,7 @@ export function FormMode() {
                         <FormLabel>Type</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -247,7 +286,7 @@ export function FormMode() {
                         <FormLabel>Level</FormLabel>
                         <Select
                           onValueChange={field.onChange}
-                          defaultValue={field.value}
+                          value={field.value}
                         >
                           <FormControl>
                             <SelectTrigger className="w-full">
@@ -270,111 +309,113 @@ export function FormMode() {
               </CardContent>
             </Card>
 
-            {/* Company */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Building
-                    size={16}
-                    variant="Bulk"
-                    className="text-primary"
-                  />
-                  Company
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="companyId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Select Company</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ''}
-                        disabled={companiesLoading}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="w-full">
-                            <SelectValue
-                              placeholder={
-                                companiesLoading
-                                  ? 'Loading companies...'
-                                  : 'Select a company'
-                              }
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {companiesList?.map((c) => (
-                            <SelectItem key={c.id} value={c.id}>
-                              {c.name}
+            {/* Company — hidden in edit mode */}
+            {!isEdit && (
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-sm">
+                    <Building
+                      size={16}
+                      variant="Bulk"
+                      className="text-primary"
+                    />
+                    Company
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="companyId"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Select Company</FormLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value ?? ''}
+                          disabled={companiesLoading}
+                        >
+                          <FormControl>
+                            <SelectTrigger className="w-full">
+                              <SelectValue
+                                placeholder={
+                                  companiesLoading
+                                    ? 'Loading companies...'
+                                    : 'Select a company'
+                                }
+                              />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {companiesList?.map((c) => (
+                              <SelectItem key={c.id} value={c.id}>
+                                {c.name}
+                              </SelectItem>
+                            ))}
+                            <SelectItem value={NEW_COMPANY_VALUE}>
+                              + Add new company
                             </SelectItem>
-                          ))}
-                          <SelectItem value={NEW_COMPANY_VALUE}>
-                            + Add new company
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                {companyIdValue === NEW_COMPANY_VALUE && (
-                  <div className="space-y-3 rounded-md border p-3">
-                    <FormField
-                      control={form.control}
-                      name="newCompanyName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Acme Inc."
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="newCompanyWebsite"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Website (optional)</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://acme.com"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="newCompanyDescription"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description (optional)</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Brief description of the company"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {companyIdValue === NEW_COMPANY_VALUE && (
+                    <div className="space-y-3 rounded-md border p-3">
+                      <FormField
+                        control={form.control}
+                        name="newCompanyName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Company Name</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Acme Inc."
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="newCompanyWebsite"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Website (optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="https://acme.com"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="newCompanyDescription"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description (optional)</FormLabel>
+                            <FormControl>
+                              <Input
+                                placeholder="Brief description of the company"
+                                {...field}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Location */}
             <Card>
@@ -474,18 +515,39 @@ export function FormMode() {
 
             {/* Actions */}
             <div className="flex justify-end gap-3">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={isSubmitting}
-                onClick={() => form.handleSubmit((v) => onSubmit(v, true))()}
-              >
-                Save as Draft
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
-                Create Job
-              </Button>
+              {isEdit ? (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                    onClick={() => router.back()}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                    Save Changes
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isSubmitting}
+                    onClick={() =>
+                      form.handleSubmit((v) => onSubmit(v, true))()
+                    }
+                  >
+                    Save as Draft
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting && <Spinner className="mr-2 h-4 w-4" />}
+                    Create Job
+                  </Button>
+                </>
+              )}
             </div>
           </form>
         </Form>

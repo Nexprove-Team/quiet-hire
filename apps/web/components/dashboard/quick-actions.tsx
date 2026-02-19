@@ -8,13 +8,13 @@ export function QuickActions() {
   return (
     <div className="flex items-center gap-2">
       <Button variant="outline" size="sm" asChild>
-        <Link href="/candidates">
+        <Link href="/recuriter/candidates">
           <People size={16} variant="Linear" className="mr-1.5" />
           Candidates
         </Link>
       </Button>
       <Button size="sm" asChild>
-        <Link href="/jobs/create">
+        <Link href="/recuriter/jobs/create">
           <AddCircle size={16} variant="Bold" className="mr-1.5" />
           Create Job
         </Link>

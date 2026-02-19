@@ -32,6 +32,7 @@ import { cn } from '@hackhyre/ui/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
 import { useRecruiterApplications } from '@/hooks/use-recruiter-applications'
+import { ApplicationStatusSelect } from '@/components/applications/status-select'
 import type {
   RecruiterApplicationListItem,
   ApplicationStatus,
@@ -104,13 +105,11 @@ function ApplicationRow({
           <span className="max-w-45 truncate">{app.jobTitle}</span>
         </div>
       </TableCell>
-      <TableCell>
-        <Badge
-          variant={config?.variant as 'default'}
-          className={cn('text-[10px] font-medium', config?.className)}
-        >
-          {config?.label}
-        </Badge>
+      <TableCell onClick={(e) => e.stopPropagation()}>
+        <ApplicationStatusSelect
+          applicationId={app.id}
+          currentStatus={app.status}
+        />
       </TableCell>
       <TableCell className="hidden md:table-cell">
         {app.relevanceScore !== null ? (
