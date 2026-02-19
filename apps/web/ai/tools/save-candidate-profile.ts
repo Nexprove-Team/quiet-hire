@@ -1,7 +1,7 @@
 import { tool } from 'ai'
 import { z } from 'zod'
 import { eq } from 'drizzle-orm'
-import { db, candidateProfiles } from '@hackhyre/db'
+import { db, candidateProfiles, user } from '@hackhyre/db'
 
 export function createSaveCandidateProfileTool(userId: string) {
   return tool({
@@ -38,6 +38,10 @@ export function createSaveCandidateProfileTool(userId: string) {
         .string()
         .optional()
         .describe('Portfolio or personal website URL'),
+      resumeUrl: z
+        .string()
+        .optional()
+        .describe('URL of uploaded resume'),
     }),
     execute: async (input) => {
       const existing = await db
@@ -59,6 +63,7 @@ export function createSaveCandidateProfileTool(userId: string) {
             linkedinUrl: input.linkedinUrl ?? null,
             githubUrl: input.githubUrl ?? null,
             portfolioUrl: input.portfolioUrl ?? null,
+            resumeUrl: input.resumeUrl ?? null,
             updatedAt: new Date(),
           })
           .where(eq(candidateProfiles.userId, userId))
@@ -74,8 +79,15 @@ export function createSaveCandidateProfileTool(userId: string) {
           linkedinUrl: input.linkedinUrl ?? null,
           githubUrl: input.githubUrl ?? null,
           portfolioUrl: input.portfolioUrl ?? null,
+          resumeUrl: input.resumeUrl ?? null,
         })
       }
+
+      // Mark onboarding as completed on the user record
+      await db
+        .update(user)
+        .set({ onboardingCompleted: true, updatedAt: new Date() })
+        .where(eq(user.id, userId))
 
       return { success: true, message: 'Profile saved successfully.' }
     },

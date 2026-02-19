@@ -1,4 +1,4 @@
-import { generateObject } from 'ai'
+import { generateText, Output } from 'ai'
 import { google } from '@ai-sdk/google'
 import { z } from 'zod'
 import { getSession } from '@/lib/auth-session'
@@ -58,9 +58,9 @@ export async function POST(req: Request) {
   const base64 = Buffer.from(buffer).toString('base64')
   const contentType = response.headers.get('content-type') || 'application/pdf'
 
-  const { object } = await generateObject({
+  const { output } = await generateText({
     model: google('gemini-2.5-flash'),
-    schema: resumeSchema,
+    output: Output.object({ schema: resumeSchema }),
     messages: [
       {
         role: 'user',
@@ -79,5 +79,5 @@ export async function POST(req: Request) {
     ],
   })
 
-  return Response.json(object)
+  return Response.json(output)
 }

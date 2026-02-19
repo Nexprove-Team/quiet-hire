@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Sheet, SheetContent, SheetTitle } from '@hackhyre/ui/components/sheet'
 import { Button } from '@hackhyre/ui/components/button'
 import { Input } from '@hackhyre/ui/components/input'
@@ -20,6 +20,7 @@ import {
 } from '@hackhyre/ui/icons'
 import { useApplySheet } from './use-apply-sheet'
 import { submitApplication } from '@/actions/applications'
+import { useProfile } from '@/hooks/use-profile'
 
 // ── Force light mode via CSS variable overrides ───────────────────────
 
@@ -52,6 +53,7 @@ interface FormData {
   coverLetter: string
   talentPoolOptIn: boolean
   resumeFile: File | null
+  existingResumeUrl: string | null
 }
 
 const INITIAL_FORM: FormData = {
@@ -61,6 +63,7 @@ const INITIAL_FORM: FormData = {
   coverLetter: '',
   talentPoolOptIn: false,
   resumeFile: null,
+  existingResumeUrl: null,
 }
 
 // ── Sheet ─────────────────────────────────────────────────────────────
@@ -70,11 +73,29 @@ const SHEET_CLASSES =
 
 export function ApplySheet() {
   const { isOpen, jobId, jobTitle, company, close } = useApplySheet()
+  const { data: profile } = useProfile()
   const [form, setForm] = useState<FormData>(INITIAL_FORM)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const didPrefill = useRef(false)
+
+  useEffect(() => {
+    if (isOpen && profile && !didPrefill.current) {
+      didPrefill.current = true
+      setForm((prev) => ({
+        ...prev,
+        name: prev.name || profile.name || '',
+        email: prev.email || profile.email || '',
+        linkedinUrl: prev.linkedinUrl || profile.linkedinUrl || '',
+        existingResumeUrl: profile.resumeUrl || null,
+      }))
+    }
+    if (!isOpen) {
+      didPrefill.current = false
+    }
+  }, [isOpen, profile])
 
   const update = (patch: Partial<FormData>) =>
     setForm((prev) => ({ ...prev, ...patch }))
@@ -89,7 +110,7 @@ export function ApplySheet() {
     setError(null)
 
     try {
-      // Upload resume if present
+      // Upload resume if present, otherwise use existing profile resume
       let resumeUrl: string | undefined
       if (form.resumeFile) {
         const fd = new window.FormData()
@@ -108,6 +129,8 @@ export function ApplySheet() {
           return
         }
         resumeUrl = uploadData.url
+      } else if (form.existingResumeUrl) {
+        resumeUrl = form.existingResumeUrl
       }
 
       // Submit application
@@ -197,6 +220,10 @@ export function ApplySheet() {
               error={error}
               fileInputRef={fileInputRef}
               onSubmit={handleSubmit}
+              existingResumeUrl={form.existingResumeUrl}
+              onClearExistingResume={() =>
+                update({ existingResumeUrl: null })
+              }
             />
           )}
         </div>
@@ -215,6 +242,8 @@ function ApplicationForm({
   error,
   fileInputRef,
   onSubmit,
+  existingResumeUrl,
+  onClearExistingResume,
 }: {
   form: FormData
   update: (patch: Partial<FormData>) => void
@@ -223,6 +252,8 @@ function ApplicationForm({
   error: string | null
   fileInputRef: React.RefObject<HTMLInputElement | null>
   onSubmit: (e: React.SyntheticEvent) => void
+  existingResumeUrl: string | null
+  onClearExistingResume: () => void
 }) {
   return (
     <form onSubmit={onSubmit} className="px-5 py-5">
@@ -305,6 +336,36 @@ function ApplicationForm({
                   update({ resumeFile: null })
                   if (fileInputRef.current) fileInputRef.current.value = ''
                 }}
+                className="shrink-0 text-neutral-400 hover:text-neutral-900"
+              >
+                <CloseCircle size={16} variant="Linear" />
+              </button>
+            </div>
+          ) : existingResumeUrl ? (
+            <div className="flex items-center gap-3 rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5">
+              <DocumentText
+                size={16}
+                variant="Bold"
+                className="text-primary shrink-0"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[12px] font-medium text-neutral-900">
+                  Resume from profile
+                </p>
+                <p className="text-[10px] text-neutral-500">
+                  Attached from your profile
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="shrink-0 text-[11px] font-medium text-neutral-500 hover:text-neutral-900"
+              >
+                Replace
+              </button>
+              <button
+                type="button"
+                onClick={onClearExistingResume}
                 className="shrink-0 text-neutral-400 hover:text-neutral-900"
               >
                 <CloseCircle size={16} variant="Linear" />
