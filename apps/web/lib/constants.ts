@@ -30,11 +30,11 @@ export const SIDEBAR_NAV_ITEMS: NavItem[] = [
   },
   { label: 'Interviews', href: '/recuriter/interviews', icon: Calendar },
   { label: 'Schedule', href: '/recuriter/schedule', icon: Clock },
-  { label: 'Analytics', href: '/recuriter/analytics', icon: Chart },
+  { label: 'Analytics', href: '/recuriter/analytics', icon: Chart, isDisabled: true },
 ]
 
 export const SIDEBAR_BOTTOM_ITEMS: NavItem[] = [
-  { label: 'Settings', href: '/recuriter/settings', icon: Setting },
+  { label: 'Settings', href: '/recuriter/settings', icon: Setting, isDisabled: true },
 ]
 
 export const JOB_STATUS_CONFIG: Record<

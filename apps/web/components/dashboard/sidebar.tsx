@@ -140,6 +140,7 @@ function SidebarContent({
                 ? pathname === '/'
                 : pathname.startsWith(item.href)
             }
+            disabled={item.isDisabled}
           />
         ))}
 
@@ -168,6 +169,7 @@ function SidebarContent({
             href={item.href}
             isCollapsed={isCollapsed}
             isActive={pathname.startsWith(item.href)}
+            disabled={item.isDisabled}
           />
         ))}
       </nav>
