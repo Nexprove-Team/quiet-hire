@@ -12,11 +12,11 @@
     "@hackhyre/db": "workspace:^",
     "@hackhyre/email": "workspace:*",
     "@react-email/render": "^2.0.4",
-    "@trigger.dev/sdk": "4.3.3",
+    "@trigger.dev/sdk": "4.4.0",
     "nanoid": "^5.1.6",
     "react": "^19.2.4",
     "resend": "^6.9.2",
-    "trigger.dev": "^4.3.3",
+    "trigger.dev": "^4.4.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

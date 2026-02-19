@@ -16,7 +16,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@t3-oss/env-nextjs": "^0.13.10",
     "clsx": "^2.1.1",
-    "lucide-react": "^0.574.0",
+    "lucide-react": "^0.575.0",
     "mongoose": "^9.2.1",
     "motion": "^12.34.2",
     "next": "16.1.6",

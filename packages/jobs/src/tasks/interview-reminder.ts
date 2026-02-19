@@ -27,7 +27,7 @@ export const sendInterviewReminderEmail = schemaTask({
       meetLink,
     } = payload;
 
-    // Render reminder emails for both parties
+
     const [candidateHtml, recruiterHtml] = await Promise.all([
       render(
         InterviewReminderEmail({
@@ -53,7 +53,6 @@ export const sendInterviewReminderEmail = schemaTask({
       ),
     ]);
 
-    // Send both reminder emails
     await Promise.allSettled([
       resend.emails.send({
         headers: { "X-Entity-Ref-ID": nanoid() },
@@ -71,7 +70,6 @@ export const sendInterviewReminderEmail = schemaTask({
       }),
     ]);
 
-    // Mark reminder as sent in the database
     await db
       .update(interviews)
       .set({ reminderSent: true, updatedAt: new Date() })

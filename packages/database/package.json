@@ -18,7 +18,7 @@
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
     "@t3-oss/env-core": "^0.13.10",
-    "@trigger.dev/sdk": "4.3.3",
+    "@trigger.dev/sdk": "4.4.0",
     "bcrypt-ts": "^8.0.1",
     "better-auth": "^1.4.18",
     "dotenv": "^17.3.1",
