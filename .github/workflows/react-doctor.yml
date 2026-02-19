@@ -1,0 +1,21 @@
+name: React Doctor Check
+
+on:
+    push:
+        branches: ["main"]
+    pull_request:
+        branches: ["main"]
+
+jobs:
+    react-doctor:
+        runs-on: ubuntu-latest
+
+        steps:
+            - uses: actions/checkout@v5
+
+            - name: Run React Doctor (web app)
+              uses: millionco/react-doctor@main
+              with:
+                  directory: apps/web
+                  verbose: true
+                  node-version: "24"
