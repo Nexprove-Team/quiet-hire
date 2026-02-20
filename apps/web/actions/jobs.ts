@@ -86,14 +86,21 @@ export async function getPublicJobs(
 ): Promise<PublicJobListItem[]> {
   const conditions = [eq(jobs.status, 'open')]
 
-  // Text search on title, company name, and skills
+  // Full-text search with weighted tsvector + company name ILIKE fallback
+  const searchVector = sql`(
+    setweight(to_tsvector('english', coalesce(${jobs.title}, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(${jobs.description}, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(${jobs.skills}::text, '')), 'C') ||
+    setweight(to_tsvector('english', coalesce(${jobs.requirements}::text, '')), 'C')
+  )`
+  let tsquery: ReturnType<typeof sql> | null = null
+
   if (filters.q?.trim()) {
-    const query = `%${filters.q.trim()}%`
+    tsquery = sql`websearch_to_tsquery('english', ${filters.q.trim()})`
     conditions.push(
       or(
-        ilike(jobs.title, query),
-        ilike(companies.name, query),
-        sql`${jobs.skills}::text ILIKE ${query}`
+        sql`${searchVector} @@ ${tsquery}`,
+        ilike(companies.name, `%${filters.q.trim()}%`)
       )!
     )
   }
@@ -138,7 +145,7 @@ export async function getPublicJobs(
     conditions.push(eq(companies.name, filters.recruiter))
   }
 
-  // Sort
+  // Sort — relevance-rank when searching, otherwise by updatedAt
   let orderBy
   switch (filters.sort) {
     case 'salary-high':
@@ -148,7 +155,11 @@ export async function getPublicJobs(
       orderBy = sql`${jobs.salaryMin} ASC NULLS LAST`
       break
     default:
-      orderBy = desc(jobs.updatedAt)
+      if (tsquery) {
+        orderBy = sql`ts_rank(${searchVector}, ${tsquery}) DESC`
+      } else {
+        orderBy = desc(jobs.updatedAt)
+      }
   }
 
   const rows = await db

@@ -7,7 +7,9 @@ import {
   integer,
   jsonb,
   pgEnum,
+  index,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { user } from "./auth";
 import { companies } from "./companies";
 
@@ -93,4 +95,14 @@ export const jobs = pgTable("jobs", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   deletedAt: timestamp("deleted_at"),
-});
+}, (table) => [
+  index("jobs_search_idx").using(
+    "gin",
+    sql`(
+      setweight(to_tsvector('english', coalesce(${table.title}, '')), 'A') ||
+      setweight(to_tsvector('english', coalesce(${table.description}, '')), 'B') ||
+      setweight(to_tsvector('english', coalesce(${table.skills}::text, '')), 'C') ||
+      setweight(to_tsvector('english', coalesce(${table.requirements}::text, '')), 'C')
+    )`
+  ),
+]);
