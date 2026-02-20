@@ -11,10 +11,13 @@ import { NewForRecruiters } from '@/components/home/landing/new-for-recuriters'
 import { getSession } from '@/lib/auth-session'
 import { redirect } from 'next/navigation'
 
-export default async function HomePage() {
+export default async function HomePage(props?: { shouldRedirect?: boolean }) {
+  const { shouldRedirect = true } = props || {};
   const session = await getSession()
   if (session && session.user.role === 'candidate') {
-    redirect('/jobs-listing')
+    if (shouldRedirect) {
+      redirect('/jobs-listing')
+    }
   }
 
   return (
