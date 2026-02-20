@@ -47,7 +47,7 @@ const FOOTER_SECTIONS = [
   {
     title: 'Company',
     links: [
-      { label: 'About Us', href: '#' },
+      { label: 'About Us', href: '/about' },
       { label: 'Careers', href: '#' },
       { label: 'Press', href: '#' },
       { label: 'Contact', href: '#' },
