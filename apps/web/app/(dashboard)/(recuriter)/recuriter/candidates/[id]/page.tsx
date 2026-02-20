@@ -27,7 +27,6 @@ import {
   Send,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
-import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useRecruiterCandidateDetail } from '@/hooks/use-recruiter-candidates'
 import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
 import { useComposeEmailSheet } from '@/components/dashboard/compose-email-sheet'
@@ -185,7 +184,7 @@ export default function CandidateDetailPage({
     )
   }
 
-  const analysis = candidate.matchAnalysis
+  const analysis = candidate.relevance
   const allJobSkills = new Set(candidate.allJobSkills)
 
   const initials = candidate.name
@@ -255,7 +254,7 @@ export default function CandidateDetailPage({
               <CardContent>
                 {analysis ? (
                   <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-                    <ScoreRing score={candidate.bestMatchScore} />
+                    <ScoreRing score={analysis.score} />
                     <div className="min-w-0 flex-1">
                       <p className="text-muted-foreground text-[13px] leading-relaxed">
                         {analysis.feedback}
@@ -266,7 +265,7 @@ export default function CandidateDetailPage({
                             Strengths
                           </p>
                           <ul className="space-y-1.5">
-                            {analysis.strengths.map((s, i) => (
+                            {analysis.strengths.map((s: string, i: number) => (
                               <motion.li
                                 key={i}
                                 initial={{ opacity: 0, x: -6 }}
@@ -294,7 +293,7 @@ export default function CandidateDetailPage({
                             Gaps &amp; Suggestions
                           </p>
                           <ul className="space-y-1.5">
-                            {analysis.gaps.map((g, i) => (
+                            {analysis.gaps.map((g: string, i: number) => (
                               <motion.li
                                 key={i}
                                 initial={{ opacity: 0, x: -6 }}
@@ -322,15 +321,12 @@ export default function CandidateDetailPage({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
-                    <ScoreRing score={candidate.bestMatchScore} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-muted-foreground text-[13px] leading-relaxed">
-                        No AI analysis available for this candidate yet. The
-                        analysis will be generated once the application is
-                        processed.
-                      </p>
-                    </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-muted-foreground text-[13px] leading-relaxed">
+                      No AI analysis available for this candidate yet. The
+                      analysis will be generated when you open the candidate
+                      sheet.
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -488,83 +484,6 @@ export default function CandidateDetailPage({
                     />
                   )}
                 </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Applications */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.12, duration: 0.3 }}
-          >
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-[15px] font-semibold">
-                  Applications
-                  <span className="text-muted-foreground ml-2 text-[12px] font-normal">
-                    ({candidate.applications.length})
-                  </span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {candidate.applications.length === 0 ? (
-                  <p className="text-muted-foreground py-4 text-center text-[12px]">
-                    No applications yet
-                  </p>
-                ) : (
-                  candidate.applications.map((app) => {
-                    const statusConfig = APPLICATION_STATUS_CONFIG[app.status]
-                    const score = app.relevanceScore
-                    return (
-                      <div
-                        key={app.id}
-                        className="rounded-lg border p-3 space-y-2"
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <p className="text-[13px] font-semibold">
-                            {app.jobTitle}
-                          </p>
-                          {score !== null && (
-                            <span
-                              className={cn(
-                                'text-[11px] font-bold tabular-nums shrink-0',
-                                Math.round(score * 100) >= 80
-                                  ? 'text-emerald-500'
-                                  : Math.round(score * 100) >= 65
-                                    ? 'text-amber-500'
-                                    : 'text-rose-500'
-                              )}
-                            >
-                              {Math.round(score * 100)}%
-                            </span>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={statusConfig?.variant as 'default'}
-                            className={cn(
-                              'text-[10px] font-medium',
-                              statusConfig?.className
-                            )}
-                          >
-                            {statusConfig?.label}
-                          </Badge>
-                          <span className="text-muted-foreground text-[11px]">
-                            {new Date(app.createdAt).toLocaleDateString(
-                              'en-US',
-                              {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                              }
-                            )}
-                          </span>
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
               </CardContent>
             </Card>
           </motion.div>

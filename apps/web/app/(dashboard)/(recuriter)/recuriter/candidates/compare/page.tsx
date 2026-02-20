@@ -23,7 +23,6 @@ import {
   LinkIcon,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
-import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
 import { useRecruiterCandidateDetails } from '@/hooks/use-recruiter-candidates'
 import type { RecruiterCandidateDetail } from '@/actions/recruiter-candidates'
 
@@ -184,7 +183,7 @@ export default function CompareCandidatesPage() {
     .filter((d): d is RecruiterCandidateDetail => d != null)
 
   const highestScore = useMemo(
-    () => Math.max(...candidates.map((c) => c.bestMatchScore), 0),
+    () => Math.max(...candidates.map((c) => (c.relevance?.score ?? 0)), 0),
     [candidates]
   )
 
@@ -288,7 +287,7 @@ export default function CompareCandidatesPage() {
                         {c.headline ?? 'Applicant'}
                       </p>
                     </div>
-                    <ScoreRing score={c.bestMatchScore} />
+                    <ScoreRing score={(c.relevance?.score ?? 0)} />
                   </motion.div>
                 )
               })}
@@ -308,8 +307,8 @@ export default function CompareCandidatesPage() {
               {candidates.map((c, i) => (
                 <div key={ids[i]} className="flex-1">
                   <ScoreBar
-                    score={c.bestMatchScore}
-                    isHighest={c.bestMatchScore === highestScore}
+                    score={(c.relevance?.score ?? 0)}
+                    isHighest={(c.relevance?.score ?? 0) === highestScore}
                   />
                 </div>
               ))}
@@ -342,39 +341,6 @@ export default function CompareCandidatesPage() {
                   </div>
                 ))}
               </div>
-            </CardContent>
-          </Card>
-
-          {/* ── Application Status ─────────────────────────────── */}
-          <Card>
-            <CardContent className="flex gap-4 p-4">
-              <SectionLabel>Status</SectionLabel>
-              {candidates.map((c, i) => {
-                const bestStatus = c.applications.reduce<string>(
-                  (best, app) => {
-                    const STATUS_PRIORITY: Record<string, number> = {
-                      hired: 5, interviewing: 4, under_review: 3, not_reviewed: 2, rejected: 1,
-                    }
-                    return (STATUS_PRIORITY[app.status] ?? 0) > (STATUS_PRIORITY[best] ?? 0)
-                      ? app.status : best
-                  },
-                  'not_reviewed'
-                )
-                const config = APPLICATION_STATUS_CONFIG[bestStatus as keyof typeof APPLICATION_STATUS_CONFIG]
-                return (
-                  <div key={ids[i]} className="flex flex-1 items-center gap-2">
-                    <Badge
-                      variant={config?.variant as 'default'}
-                      className={cn('text-[10px] font-medium', config?.className)}
-                    >
-                      {config?.label}
-                    </Badge>
-                    <span className="text-muted-foreground text-[11px]">
-                      {c.applications.length} job{c.applications.length !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                )
-              })}
             </CardContent>
           </Card>
 
@@ -440,9 +406,9 @@ export default function CompareCandidatesPage() {
                 <SectionLabel>Strengths</SectionLabel>
                 {candidates.map((c, i) => (
                   <div key={ids[i]} className="flex-1">
-                    {c.matchAnalysis?.strengths && c.matchAnalysis.strengths.length > 0 ? (
+                    {c.relevance?.strengths && c.relevance.strengths.length > 0 ? (
                       <ul className="list-inside list-disc space-y-1">
-                        {c.matchAnalysis.strengths.map((s, j) => (
+                        {c.relevance.strengths.map((s: string, j: number) => (
                           <li key={j} className="text-[12px] leading-relaxed">
                             {s}
                           </li>
@@ -460,9 +426,9 @@ export default function CompareCandidatesPage() {
                 <SectionLabel>Gaps</SectionLabel>
                 {candidates.map((c, i) => (
                   <div key={ids[i]} className="flex-1">
-                    {c.matchAnalysis?.gaps && c.matchAnalysis.gaps.length > 0 ? (
+                    {c.relevance?.gaps && c.relevance.gaps.length > 0 ? (
                       <ul className="list-inside list-disc space-y-1">
-                        {c.matchAnalysis.gaps.map((g, j) => (
+                        {c.relevance.gaps.map((g: string, j: number) => (
                           <li key={j} className="text-muted-foreground text-[12px] leading-relaxed">
                             {g}
                           </li>
@@ -480,9 +446,9 @@ export default function CompareCandidatesPage() {
                 <SectionLabel>Feedback</SectionLabel>
                 {candidates.map((c, i) => (
                   <div key={ids[i]} className="flex-1">
-                    {c.matchAnalysis?.feedback ? (
+                    {c.relevance?.feedback ? (
                       <p className="text-[12px] leading-relaxed">
-                        {c.matchAnalysis.feedback}
+                        {c.relevance.feedback}
                       </p>
                     ) : (
                       <span className="text-muted-foreground text-[12px]">&mdash;</span>

@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Sheet, SheetContent, SheetTitle } from '@hackhyre/ui/components/sheet'
 import {
   Avatar,
@@ -25,19 +26,24 @@ import {
   LinkIcon,
   DocumentText,
   Star,
+  TickCircle,
+  Warning,
   ArrowLeft,
   ArrowRight,
   Send,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCandidateSheet } from '@/hooks/use-candidate-sheet'
-import { useRecruiterCandidateDetail } from '@/hooks/use-recruiter-candidates'
+import {
+  useRecruiterCandidateDetail,
+  recruiterCandidateKeys,
+} from '@/hooks/use-recruiter-candidates'
 import { useScheduleInterviewSheet } from '@/components/dashboard/schedule-interview-sheet'
 import { useComposeEmailSheet } from '@/components/dashboard/compose-email-sheet'
-import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
+import { generateRecruiterRelevance } from '@/actions/recruiter-candidates'
 import type {
   RecruiterCandidateDetail,
-  CandidateApplication,
+  RecruiterRelevance,
 } from '@/actions/recruiter-candidates'
 
 // ── Info Item ────────────────────────────────────────────────────────
@@ -183,7 +189,7 @@ function CvTab({ candidate }: { candidate: RecruiterCandidateDetail }) {
             <div className="overflow-hidden rounded-lg border">
               <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(candidate.resumeUrl)}&embedded=true`}
-                className="h-[400px] w-full"
+                className="h-100 w-full"
                 title="Resume"
               />
             </div>
@@ -207,52 +213,154 @@ function CvTab({ candidate }: { candidate: RecruiterCandidateDetail }) {
   )
 }
 
-// ── Applied Jobs Tab ────────────────────────────────────────────────
+// ── Relevance Tab ───────────────────────────────────────────────────
 
-function AppliedJobsTab({
-  applications,
+function RelevanceTab({
+  relevance,
+  candidateSkills,
+  allJobSkills,
+  isGenerating,
 }: {
-  applications: CandidateApplication[]
+  relevance: RecruiterRelevance | null
+  candidateSkills: string[]
+  allJobSkills: string[]
+  isGenerating: boolean
 }) {
-  return (
-    <div className="space-y-3 pt-4">
-      {applications.length === 0 ? (
+  if (isGenerating) {
+    return (
+      <div className="space-y-4 pt-4">
+        <div className="flex flex-col items-center gap-3 py-8">
+          <div className="border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+          <p className="text-muted-foreground text-[12px]">
+            Analyzing candidate fit...
+          </p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!relevance) {
+    return (
+      <div className="pt-4">
         <p className="text-muted-foreground py-8 text-center text-[12px]">
-          No applications found
+          No relevance data available
         </p>
-      ) : (
-        applications.map((app) => {
-          const config = APPLICATION_STATUS_CONFIG[app.status]
-          return (
-            <div key={app.id} className="space-y-2 rounded-xl border p-3">
-              <div className="flex items-center justify-between">
-                <p className="text-[13px] font-semibold">{app.jobTitle}</p>
+      </div>
+    )
+  }
+
+  const pct = Math.round(relevance.score * 100)
+  const scoreColor =
+    pct >= 75
+      ? 'text-emerald-500'
+      : pct >= 50
+        ? 'text-amber-500'
+        : 'text-red-500'
+  const ringColor =
+    pct >= 75
+      ? 'border-emerald-500/30'
+      : pct >= 50
+        ? 'border-amber-500/30'
+        : 'border-red-500/30'
+
+  const candidateSkillsLower = candidateSkills.map((s) => s.toLowerCase())
+
+  return (
+    <div className="space-y-5 pt-4">
+      {/* Score */}
+      <div className="flex items-center gap-4">
+        <div
+          className={cn(
+            'flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-3',
+            ringColor
+          )}
+        >
+          <span className={cn('text-xl font-bold', scoreColor)}>{pct}%</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <h4 className="text-[13px] font-semibold">Relevance Score</h4>
+          <p className="text-muted-foreground mt-0.5 text-[12px] leading-relaxed">
+            {relevance.feedback}
+          </p>
+        </div>
+      </div>
+
+      <Separator />
+
+      {/* Strengths */}
+      {relevance.strengths.length > 0 && (
+        <>
+          <div>
+            <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+              Strengths
+            </h4>
+            <ul className="space-y-1.5">
+              {relevance.strengths.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 text-[12px]">
+                  <TickCircle
+                    size={14}
+                    variant="Bold"
+                    className="mt-0.5 shrink-0 text-emerald-500"
+                  />
+                  <span>{s}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Gaps */}
+      {relevance.gaps.length > 0 && (
+        <>
+          <div>
+            <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+              Gaps
+            </h4>
+            <ul className="space-y-1.5">
+              {relevance.gaps.map((g, i) => (
+                <li key={i} className="flex items-start gap-2 text-[12px]">
+                  <Warning
+                    size={14}
+                    variant="Bold"
+                    className="mt-0.5 shrink-0 text-amber-500"
+                  />
+                  <span>{g}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <Separator />
+        </>
+      )}
+
+      {/* Skills Overlap */}
+      {allJobSkills.length > 0 && (
+        <div>
+          <h4 className="text-muted-foreground mb-2 text-[12px] font-semibold tracking-wider uppercase">
+            Skills Match
+          </h4>
+          <div className="flex flex-wrap gap-1.5">
+            {allJobSkills.map((skill) => {
+              const matched = candidateSkillsLower.includes(skill.toLowerCase())
+              return (
                 <Badge
-                  variant={config?.variant as 'default'}
-                  className={cn('text-[10px] font-medium', config?.className)}
+                  key={skill}
+                  variant="secondary"
+                  className={cn(
+                    'px-2 py-0.5 text-[11px] font-medium',
+                    matched
+                      ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                      : 'text-muted-foreground opacity-60'
+                  )}
                 >
-                  {config?.label}
+                  {skill}
                 </Badge>
-              </div>
-              <div className="text-muted-foreground flex items-center gap-3 text-[11px]">
-                <span className="flex items-center gap-1">
-                  <Calendar size={11} variant="Linear" />
-                  {new Date(app.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </span>
-                {app.relevanceScore !== null && (
-                  <span className="flex items-center gap-1">
-                    <Star size={11} variant="Bold" className="text-amber-500" />
-                    {Math.round(app.relevanceScore * 100)}% match
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })
+              )
+            })}
+          </div>
+        </div>
       )}
     </div>
   )
@@ -297,6 +405,29 @@ export function CandidateSheet() {
   const { data: candidate, isLoading } = useRecruiterCandidateDetail(
     candidateId ?? ''
   )
+
+  const queryClient = useQueryClient()
+  const relevanceMutation = useMutation({
+    mutationFn: (appId: string) => generateRecruiterRelevance(appId),
+    onSuccess: () => {
+      if (candidateId) {
+        queryClient.invalidateQueries({
+          queryKey: recruiterCandidateKeys.detail(candidateId),
+        })
+      }
+    },
+  })
+
+  // Trigger on-demand generation when relevance is missing
+  useEffect(() => {
+    if (
+      candidate &&
+      !candidate.relevance &&
+      relevanceMutation.isIdle
+    ) {
+      relevanceMutation.mutate(candidate.bestApplicationId)
+    }
+  }, [candidate, relevanceMutation.isIdle]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const currentIndex = candidateId ? candidateIds.indexOf(candidateId) : -1
   const hasPrev = currentIndex > 0
@@ -496,21 +627,25 @@ export function CandidateSheet() {
                       />
                       CV
                     </TabsTrigger>
-                    <TabsTrigger value="applied" className="flex-1 text-[12px]">
-                      <Briefcase
-                        size={13}
-                        variant="Linear"
-                        className="mr-1"
-                      />
-                      Applied Jobs
+                    <TabsTrigger
+                      value="relevance"
+                      className="flex-1 text-[12px]"
+                    >
+                      <Star size={13} variant="Linear" className="mr-1" />
+                      Relevance
                     </TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="cv">
                     <CvTab candidate={candidate} />
                   </TabsContent>
-                  <TabsContent value="applied">
-                    <AppliedJobsTab applications={candidate.applications} />
+                  <TabsContent value="relevance">
+                    <RelevanceTab
+                      relevance={candidate.relevance}
+                      candidateSkills={candidate.skills}
+                      allJobSkills={candidate.allJobSkills}
+                      isGenerating={relevanceMutation.isPending}
+                    />
                   </TabsContent>
                 </Tabs>
               </div>

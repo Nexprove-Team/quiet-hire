@@ -1,8 +1,19 @@
 'use server'
 
 import { eq, and, desc, isNull, inArray } from 'drizzle-orm'
-import { db, jobs, applications, candidateProfiles, user } from '@hackhyre/db'
+import {
+  db,
+  jobs,
+  applications,
+  candidateProfiles,
+  user,
+  companies,
+  recruiterRelevance,
+} from '@hackhyre/db'
 import { getSession } from '@/lib/auth-session'
+import { generateText, Output } from 'ai'
+import { google } from '@ai-sdk/google'
+import { z } from 'zod'
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -36,6 +47,13 @@ export interface CandidateApplication {
   createdAt: Date
 }
 
+export interface RecruiterRelevance {
+  score: number
+  feedback: string
+  strengths: string[]
+  gaps: string[]
+}
+
 export interface RecruiterCandidateDetail {
   name: string
   email: string
@@ -50,13 +68,8 @@ export interface RecruiterCandidateDetail {
   portfolioUrl: string | null
   resumeUrl: string | null
   image: string | null
-  bestMatchScore: number
-  matchAnalysis: {
-    feedback: string
-    strengths: string[]
-    gaps: string[]
-  } | null
-  applications: CandidateApplication[]
+  bestApplicationId: string
+  relevance: RecruiterRelevance | null
   allJobSkills: string[]
 }
 
@@ -270,12 +283,7 @@ export async function getRecruiterCandidateDetail(
     (a) => a.candidateEmail.toLowerCase() === candidateEmail
   )
 
-  // 5. Compute best match score & find best application
-  const scores = candidateApps
-    .map((a) => a.relevanceScore)
-    .filter((s): s is number => s !== null)
-  const bestMatchScore = scores.length > 0 ? Math.max(...scores) : 0
-
+  // 5. Find the best application (highest relevance score)
   const bestApp = candidateApps.reduce<(typeof candidateApps)[0] | null>(
     (best, a) => {
       if (a.relevanceScore === null) return best
@@ -284,11 +292,28 @@ export async function getRecruiterCandidateDetail(
     },
     null
   )
+  const bestApplicationId = (bestApp ?? candidateApps[0]!).id
 
-  // 6. Get matchAnalysis from best-scoring application
-  const matchAnalysis =
-    (bestApp?.matchAnalysis as RecruiterCandidateDetail['matchAnalysis']) ??
-    null
+  // 6. Fetch recruiter relevance for the anchor application
+  const [relevanceRow] = await db
+    .select()
+    .from(recruiterRelevance)
+    .where(
+      and(
+        eq(recruiterRelevance.applicationId, applicationId),
+        eq(recruiterRelevance.recruiterId, recruiterId)
+      )
+    )
+    .limit(1)
+
+  const relevance: RecruiterRelevance | null = relevanceRow
+    ? {
+        score: relevanceRow.score,
+        feedback: relevanceRow.feedback,
+        strengths: relevanceRow.strengths as string[],
+        gaps: relevanceRow.gaps as string[],
+      }
+    : null
 
   // 7. If registered, fetch candidate profile + user
   const candidateId = anchorApp.candidateId
@@ -350,15 +375,6 @@ export async function getRecruiterCandidateDetail(
     ),
   ]
 
-  // 9. Build applications list
-  const appsList: CandidateApplication[] = candidateApps.map((a) => ({
-    id: a.id,
-    jobTitle: jobTitleMap.get(a.jobId) ?? 'Unknown Job',
-    status: a.status as ApplicationStatus,
-    relevanceScore: a.relevanceScore,
-    createdAt: a.createdAt,
-  }))
-
   // Get resume URL from profile or best application
   const resumeUrl =
     profile?.resumeUrl ??
@@ -380,9 +396,171 @@ export async function getRecruiterCandidateDetail(
     portfolioUrl: profile?.portfolioUrl ?? null,
     resumeUrl,
     image: userInfo?.image ?? null,
-    bestMatchScore,
-    matchAnalysis,
-    applications: appsList,
+    bestApplicationId,
+    relevance,
     allJobSkills,
   }
+}
+
+// ── Recruiter Relevance Generation ────────────────────────────────────────────
+
+const recruiterRelevanceSchema = z.object({
+  matchPercentage: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .describe('Overall match percentage between candidate and job (0-100)'),
+  strengths: z
+    .array(z.string())
+    .describe(
+      'List of 2-4 key strengths where the candidate matches the job requirements'
+    ),
+  gaps: z
+    .array(z.string())
+    .describe(
+      'List of 1-3 gaps or areas where the candidate may fall short'
+    ),
+  recommendation: z
+    .string()
+    .describe(
+      'A concise 1-2 sentence hiring recommendation for the recruiter about this candidate'
+    ),
+})
+
+export async function generateRecruiterRelevance(
+  applicationId: string
+): Promise<RecruiterRelevance | null> {
+  const session = await getSession()
+  if (!session) throw new Error('Unauthorized')
+
+  const recruiterId = session.user.id
+
+  // Check if already exists
+  const [existing] = await db
+    .select()
+    .from(recruiterRelevance)
+    .where(
+      and(
+        eq(recruiterRelevance.applicationId, applicationId),
+        eq(recruiterRelevance.recruiterId, recruiterId)
+      )
+    )
+    .limit(1)
+
+  if (existing) {
+    return {
+      score: existing.score,
+      feedback: existing.feedback,
+      strengths: existing.strengths as string[],
+      gaps: existing.gaps as string[],
+    }
+  }
+
+  // Fetch application + job + company
+  const rows = await db
+    .select({
+      application: applications,
+      job: jobs,
+      company: companies,
+    })
+    .from(applications)
+    .innerJoin(jobs, eq(applications.jobId, jobs.id))
+    .leftJoin(companies, eq(jobs.companyId, companies.id))
+    .where(eq(applications.id, applicationId))
+    .limit(1)
+
+  const row = rows[0]
+  if (!row) return null
+
+  // Fetch candidate profile if registered
+  let candidateData: {
+    headline: string | null
+    bio: string | null
+    skills: string[]
+    experienceYears: number | null
+    location: string | null
+  } = {
+    headline: null,
+    bio: null,
+    skills: [],
+    experienceYears: null,
+    location: null,
+  }
+
+  if (row.application.candidateId) {
+    const [profile] = await db
+      .select()
+      .from(candidateProfiles)
+      .where(eq(candidateProfiles.userId, row.application.candidateId))
+      .limit(1)
+
+    if (profile) {
+      candidateData = {
+        headline: profile.headline,
+        bio: profile.bio,
+        skills: (profile.skills as string[]) ?? [],
+        experienceYears: profile.experienceYears,
+        location: profile.location,
+      }
+    }
+  }
+
+  const candidateHeadline =
+    candidateData.headline ?? row.application.candidateName
+  const candidateBio =
+    candidateData.bio ?? row.application.coverLetter ?? 'Not specified'
+  const candidateSkills =
+    candidateData.skills.length > 0
+      ? candidateData.skills.join(', ')
+      : 'None listed'
+
+  const prompt = `You are an expert recruiter advisor. Evaluate this candidate against the job listing and provide a hiring relevance assessment from the recruiter's perspective.
+
+## Candidate Profile
+- Name: ${row.application.candidateName}
+- Headline: ${candidateHeadline}
+- Summary: ${candidateBio}
+- Skills: ${candidateSkills}
+- Years of Experience: ${candidateData.experienceYears ?? 'Unknown'}
+- Location: ${candidateData.location ?? 'Not specified'}
+
+## Job Listing
+- Title: ${row.job.title}
+- Company: ${row.company?.name ?? 'Unknown'}
+- Description: ${row.job.description}
+- Required Skills: ${(row.job.skills ?? []).length > 0 ? (row.job.skills ?? []).join(', ') : 'None listed'}
+- Requirements: ${(row.job.requirements ?? []).length > 0 ? (row.job.requirements ?? []).join('; ') : 'None listed'}
+- Experience Level: ${row.job.experienceLevel}
+- Location: ${row.job.location ?? 'Not specified'}${row.job.isRemote ? ' (Remote)' : ''}
+- Employment Type: ${row.job.employmentType}
+
+Provide an honest assessment from the recruiter's perspective. Be specific about which skills and qualifications match or are missing. The match percentage should reflect actual alignment — don't inflate it. Keep strengths and gaps concise (one short sentence each).`
+
+  const { output } = await generateText({
+    model: google('gemini-2.5-flash'),
+    output: Output.object({ schema: recruiterRelevanceSchema }),
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  if (!output) return null
+
+  const result: RecruiterRelevance = {
+    score: output.matchPercentage / 100,
+    feedback: output.recommendation,
+    strengths: output.strengths,
+    gaps: output.gaps,
+  }
+
+  // Persist to recruiter_relevance table
+  await db.insert(recruiterRelevance).values({
+    applicationId,
+    recruiterId,
+    score: result.score,
+    feedback: result.feedback,
+    strengths: result.strengths,
+    gaps: result.gaps,
+  })
+
+  return result
 }

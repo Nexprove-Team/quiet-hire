@@ -50,6 +50,13 @@
       "when": 1771600486846,
       "tag": "0006_demonic_ted_forrester",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1771614756941,
+      "tag": "0007_mighty_kree",
+      "breakpoints": true
     }
   ]
 }
