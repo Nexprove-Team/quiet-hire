@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   Select,
   SelectTrigger,
@@ -36,6 +36,12 @@ const DEFAULTS = {
   schedule: ['Full time', 'Part time'],
   employment: ['Full day', 'Flexible schedule', 'Distant work'],
   recruiter: '',
+}
+
+export const PERIOD_CONFIG: Record<string, { max: number; step: number }> = {
+  hourly: { max: 500, step: 5 },
+  monthly: { max: 20000, step: 100 },
+  yearly: { max: 300000, step: 5000 },
 }
 
 function arraysEqual(a: string[], b: string[]) {
@@ -166,26 +172,38 @@ function PeriodFilter({
 
 function SalaryFilter({
   salary,
+  period,
   onChange,
 }: {
   salary: number[]
+  period: string
   onChange: (v: number[]) => void
 }) {
+  const config = PERIOD_CONFIG[period] ?? PERIOD_CONFIG.monthly!
+  const [local, setLocal] = useState(salary)
+
+  const s0 = salary[0] ?? 0
+  const s1 = salary[1] ?? config.max
+  useEffect(() => {
+    setLocal([s0, s1])
+  }, [s0, s1])
+
   return (
-    <div className="flex items-center gap-4">
-      <div className="shrink-0 text-right">
+    <div className="flex items-center gap-3">
+      <div className="shrink-0">
         <p className="text-[11px] font-medium text-neutral-500">Salary range</p>
         <p className="text-sm font-semibold text-white">
-          ${salary[0]?.toLocaleString()} – ${salary[1]?.toLocaleString()}
+          ${local[0]?.toLocaleString()} – ${local[1]?.toLocaleString()}
         </p>
       </div>
       <Slider
-        defaultValue={salary}
+        value={local}
         min={0}
-        max={20000}
-        step={100}
-        onValueChange={onChange}
-        className="w-full"
+        max={config.max}
+        step={config.step}
+        onValueChange={setLocal}
+        onValueCommit={onChange}
+        className="w-full min-w-24"
       />
     </div>
   )
@@ -197,13 +215,20 @@ const SearchFilter = () => {
   const [filters, setFilters] = useJobListingFilter()
   const [filtersOpen, setFiltersOpen] = useState(false)
 
+  const periodConfig = PERIOD_CONFIG[filters.period] ?? PERIOD_CONFIG.monthly!
+
+  const handlePeriodChange = (v: string) => {
+    const config = PERIOD_CONFIG[v] ?? PERIOD_CONFIG.monthly!
+    setFilters({ period: v, salary: [0, config.max] })
+  }
+
   const hasActiveFilters =
     filters.q !== DEFAULTS.q ||
     (filters.location !== '' && filters.location !== DEFAULTS.location) ||
     filters.experience !== DEFAULTS.experience ||
     filters.period !== DEFAULTS.period ||
-    filters.salary[0] !== DEFAULTS.salary[0] ||
-    filters.salary[1] !== DEFAULTS.salary[1] ||
+    filters.salary[0] !== 0 ||
+    filters.salary[1] !== periodConfig.max ||
     filters.recruiter !== DEFAULTS.recruiter ||
     arraysEqual(filters.schedule, DEFAULTS.schedule) ||
     arraysEqual(filters.employment, DEFAULTS.employment)
@@ -212,7 +237,7 @@ const SearchFilter = () => {
     filters.location !== '' && filters.location !== 'any',
     filters.experience !== '' && filters.experience !== 'any',
     filters.period !== 'monthly',
-    filters.salary[0] !== 0 || filters.salary[1] !== 20000,
+    filters.salary[0] !== 0 || filters.salary[1] !== periodConfig.max,
   ].filter(Boolean).length
 
   const resetAll = () =>
@@ -289,10 +314,11 @@ const SearchFilter = () => {
               />
               <PeriodFilter
                 value={filters.period}
-                onChange={(v) => setFilters({ period: v })}
+                onChange={handlePeriodChange}
               />
               <SalaryFilter
                 salary={filters.salary}
+                period={filters.period}
                 onChange={(v) => setFilters({ salary: v })}
               />
               {hasActiveFilters && (
@@ -347,13 +373,14 @@ const SearchFilter = () => {
           <div className="border-l border-neutral-800 px-4 py-2">
             <PeriodFilter
               value={filters.period}
-              onChange={(v) => setFilters({ period: v })}
+              onChange={handlePeriodChange}
             />
           </div>
 
           <div className="ml-auto border-l border-neutral-800 px-4 py-2">
             <SalaryFilter
               salary={filters.salary}
+              period={filters.period}
               onChange={(v) => setFilters({ salary: v })}
             />
           </div>

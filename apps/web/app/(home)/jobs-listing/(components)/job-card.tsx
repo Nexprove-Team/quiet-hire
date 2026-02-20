@@ -4,25 +4,7 @@ import { Button } from '@hackhyre/ui/components/button'
 import { Badge } from '@hackhyre/ui/components/badge'
 import { Bookmark } from '@hackhyre/ui/icons'
 import type { PublicJob } from './mock-data'
-
-// ── Apple Logo SVG ─────────────────────────────────────────────────────
-
-function AppleLogo() {
-  return (
-    <svg
-      width="14"
-      height="17"
-      viewBox="0 0 14 17"
-      fill="currentColor"
-      className="text-white"
-    >
-      <path d="M13.2 12.8c-.3.7-.7 1.3-1.1 1.8-.6.8-1.1 1.3-1.5 1.6-.6.5-1.3.7-2 .7-.5 0-1.1-.1-1.8-.4-.7-.3-1.3-.4-1.8-.4s-1.1.1-1.8.4c-.7.3-1.2.4-1.7.4-.7 0-1.4-.3-2-.8C.9 15.5.4 14.8 0 13.8c-.1-.4.1-.7.4-.9.3-.1.7 0 .8.3.3.8.7 1.4 1.2 1.8.4.3.8.5 1.2.5.3 0 .8-.1 1.4-.4.6-.3 1.2-.4 1.7-.4.5 0 1 .1 1.7.4.6.3 1.1.4 1.4.4.4 0 .9-.2 1.3-.5.4-.4.8-.9 1.1-1.6.2-.4.4-.9.5-1.3.1-.3-.1-.6-.3-.8-.8-.4-1.4-.9-1.8-1.6-.5-.7-.7-1.5-.7-2.4 0-1 .3-1.9.9-2.6.5-.5 1-.9 1.7-1.2.2-.1.5 0 .7.2.1.2.1.5-.1.6-.5.2-.9.5-1.3.9-.4.5-.6 1.2-.6 1.9 0 .8.2 1.4.6 2 .4.6.9 1 1.5 1.3.2.1.3.4.3.6 0 .1 0 .2-.1.3-.2.5-.3 1-.6 1.5z" />
-      <path d="M10.1 0c.1.7-.2 1.5-.7 2.2-.6.8-1.3 1.3-2.1 1.2-.1-.7.2-1.4.7-2.1C8.6.5 9.3.1 10.1 0z" />
-    </svg>
-  )
-}
-
-// ── Job Card ───────────────────────────────────────────────────────────
+import { shrinkString } from '@/lib/shrink-string'
 
 export function JobCard({
   job,
@@ -38,7 +20,6 @@ export function JobCard({
         job.cardColor
       )}
     >
-      {/* Top row — date + bookmark */}
       <div className="mb-4 flex items-start justify-between">
         <span
           className={cn(
@@ -77,15 +58,10 @@ export function JobCard({
             job.logoColor
           )}
         >
-          {job.company === 'Apple' ? (
-            <AppleLogo />
-          ) : (
-            <span className="text-sm font-bold">{job.logoLetter}</span>
-          )}
+          <span className="text-sm font-bold">{job.logoLetter}</span>
         </div>
       </div>
 
-      {/* Tags */}
       <div className="mb-4 flex flex-wrap gap-1.5">
         {job.tags.map((tag) => (
           <Badge
@@ -93,7 +69,13 @@ export function JobCard({
             variant="outline"
             className="rounded-full border-neutral-200 bg-white/60 px-2.5 py-0.5 text-[10.5px] font-medium text-black"
           >
-            {tag}
+            {shrinkString({
+              text: tag,
+              prefixLength: 5,
+              afterLength: 4,
+              useDot: true,
+              shrinkHolderNo: 3,
+            })}
           </Badge>
         ))}
       </div>
@@ -116,8 +98,6 @@ export function JobCard({
   )
 }
 
-// ── Compact Job Card (for featured sidebar) ────────────────────────────
-
 export function FeaturedJobCard({
   job,
   onToggleSave,
@@ -133,11 +113,7 @@ export function FeaturedJobCard({
           job.logoColor
         )}
       >
-        {job.company === 'Apple' ? (
-          <AppleLogo />
-        ) : (
-          <span className="text-xs font-bold">{job.logoLetter}</span>
-        )}
+        <span className="text-xs font-bold">{job.logoLetter}</span>
       </div>
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] font-semibold text-neutral-900">
@@ -152,7 +128,13 @@ export function FeaturedJobCard({
               key={tag}
               className="rounded-full bg-neutral-100 px-2 py-0.5 text-[9px] font-medium text-neutral-600"
             >
-              {tag}
+              {shrinkString({
+                text: tag,
+                prefixLength: 5,
+                afterLength: 4,
+                useDot: true,
+                shrinkHolderNo: 3,
+              })}
             </span>
           ))}
         </div>

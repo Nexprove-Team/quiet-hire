@@ -1,14 +1,12 @@
 'use client'
 
 import { cn } from '@hackhyre/ui/lib/utils'
-import { Star, TrendUp } from '@hackhyre/ui/icons'
 import { FeaturedJobCard } from './job-card'
+import { Star, TrendUp } from '@hackhyre/ui/icons'
 import { useJobListingFilter } from './use-job-listing-filter'
-import { useSavedJobIds, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 import { toDisplayJob, toDisplayRecruiter } from './mock-data'
 import { useFeaturedJobs, useTopCompanies } from '@/hooks/use-jobs'
-
-// ── Featured Sidebar ───────────────────────────────────────────────────
+import { useSavedJobIds, useToggleSaveJob } from '@/hooks/use-saved-jobs'
 
 export function FeaturedSidebar() {
   const [filters, setFilters] = useJobListingFilter()
@@ -36,7 +34,6 @@ export function FeaturedSidebar() {
 
   return (
     <aside className="hidden w-70 shrink-0 space-y-6 xl:block">
-      {/* Featured Jobs */}
       <div>
         <div className="mb-3 flex items-center gap-2">
           <Star size={16} variant="Bold" className="text-amber-500" />
@@ -61,8 +58,6 @@ export function FeaturedSidebar() {
           </div>
         )}
       </div>
-
-      {/* Top Recruiters */}
       <div>
         <div className="mb-3 flex items-center gap-2">
           <TrendUp size={16} variant="Bold" className="text-primary" />

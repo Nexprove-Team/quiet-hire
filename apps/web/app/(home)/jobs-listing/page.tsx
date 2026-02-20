@@ -13,7 +13,7 @@ import {
 import { Filter } from '@hackhyre/ui/icons'
 import { useDebounce } from 'use-debounce'
 
-import SearchFilter from './(components)/search-filter'
+import SearchFilter, { PERIOD_CONFIG } from './(components)/search-filter'
 import { FiltersSidebar } from './(components)/filters-sidebar'
 import { FeaturedSidebar } from './(components)/featured-sidebar'
 import { JobCard } from './(components)/job-card'
@@ -23,12 +23,10 @@ import { toDisplayJob } from './(components)/mock-data'
 import { usePublicJobs } from '@/hooks/use-jobs'
 import type { JobFilters } from '@/actions/jobs'
 
-// ── Main Page ──────────────────────────────────────────────────────────
-
-const PAGE_SIZE = 6
+const PAGE_SIZE = 10
 
 export default function JobsPage() {
-  const [filters, setFilters] = useJobListingFilter()
+  const [filters] = useJobListingFilter()
   const { data: savedIds = [] } = useSavedJobIds()
   const { mutate: toggleSave } = useToggleSaveJob()
   const savedSet = useMemo(() => new Set(savedIds), [savedIds])
@@ -38,12 +36,11 @@ export default function JobsPage() {
     'updated'
   )
 
-  // Debounce the search query by 300ms
   const [debouncedQuery] = useDebounce(filters.q, 300)
 
-  // Build server-side filter params
-  const serverFilters: JobFilters = useMemo(
-    () => ({
+  const serverFilters: JobFilters = useMemo(() => {
+    const periodMax = PERIOD_CONFIG[filters.period]?.max ?? 20000
+    return {
       q: debouncedQuery || undefined,
       location:
         filters.location && filters.location !== 'any'
@@ -53,35 +50,39 @@ export default function JobsPage() {
         filters.experience && filters.experience !== 'any'
           ? filters.experience
           : undefined,
-      salaryMin: filters.salary[0] ?? undefined,
-      salaryMax: filters.salary[1] ?? undefined,
+      salaryMin: (filters.salary[0] ?? 0) > 0 ? filters.salary[0] : undefined,
+      salaryMax:
+        (filters.salary[1] ?? periodMax) < periodMax
+          ? filters.salary[1]
+          : undefined,
       recruiter: filters.recruiter || undefined,
       sort,
-    }),
-    [debouncedQuery, filters.location, filters.experience, filters.salary, filters.recruiter, sort]
-  )
+    }
+  }, [
+    debouncedQuery,
+    filters.location,
+    filters.experience,
+    filters.salary,
+    filters.period,
+    filters.recruiter,
+    sort,
+  ])
 
   const { data: rawJobs, isLoading } = usePublicJobs(serverFilters)
 
-  // Reset visible count when filters change
   useEffect(() => {
     setVisibleCount(PAGE_SIZE)
   }, [serverFilters])
 
-  // Map server data to display shape + apply client-side schedule/employment filters
   const displayJobs = useMemo(() => {
     if (!rawJobs) return []
 
     let mapped = rawJobs.map((item, i) => toDisplayJob(item, i))
-
-    // Client-side schedule filter
     if (filters.schedule.length > 0) {
       mapped = mapped.filter((job) =>
         job.workingSchedule.some((s) => filters.schedule.includes(s))
       )
     }
-
-    // Client-side employment type filter
     if (filters.employment.length > 0) {
       mapped = mapped.filter((job) =>
         job.employmentType.some((t) => filters.employment.includes(t))
@@ -90,8 +91,6 @@ export default function JobsPage() {
 
     return mapped
   }, [rawJobs, filters.schedule, filters.employment])
-
-  // Add save state to jobs
   const jobsWithSaveState = displayJobs.map((job) => ({
     ...job,
     saved: savedSet.has(job.id),
@@ -99,8 +98,6 @@ export default function JobsPage() {
 
   const visibleJobs = jobsWithSaveState.slice(0, visibleCount)
   const hasMore = visibleCount < jobsWithSaveState.length
-
-  // Intersection observer for infinite scroll
   const loadMore = useCallback(() => {
     setVisibleCount((prev) =>
       Math.min(prev + PAGE_SIZE, jobsWithSaveState.length)
@@ -213,7 +210,6 @@ export default function JobsPage() {
             </div>
           )}
 
-          {/* Infinite scroll sentinel */}
           {hasMore && (
             <div ref={sentinelRef} className="flex justify-center py-8">
               <span className="text-sm text-neutral-400">Loading more...</span>
@@ -221,7 +217,6 @@ export default function JobsPage() {
           )}
         </div>
 
-        {/* Right — Featured Jobs + Top Recruiters (self-contained) */}
         <FeaturedSidebar />
       </div>
     </div>

@@ -104,6 +104,9 @@ export async function getPublicJobs(
       conditions.push(eq(jobs.isRemote, true))
     } else if (filters.location === 'onsite') {
       conditions.push(eq(jobs.isRemote, false))
+    } else if (filters.location === 'hybrid') {
+      conditions.push(eq(jobs.isRemote, true))
+      conditions.push(sql`${jobs.location} IS NOT NULL`)
     }
   }
 
@@ -123,10 +126,10 @@ export async function getPublicJobs(
   }
 
   // Salary range filter
-  if (filters.salaryMin != null && filters.salaryMin > 0) {
+  if (filters.salaryMin != null) {
     conditions.push(gte(jobs.salaryMin, filters.salaryMin))
   }
-  if (filters.salaryMax != null && filters.salaryMax < 20000) {
+  if (filters.salaryMax != null) {
     conditions.push(lte(jobs.salaryMax, filters.salaryMax))
   }
 
