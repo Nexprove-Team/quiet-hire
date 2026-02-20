@@ -57,7 +57,7 @@ const FOOTER_SECTIONS = [
   {
     title: 'Legal',
     links: [
-      { label: 'Privacy Policy', href: '#' },
+      { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Cookie Policy', href: '#' },
       { label: 'Accessibility', href: '#' },
@@ -93,7 +93,7 @@ const SOCIAL_LINKS = [
 ] as const
 
 const LEGAL_LINKS = [
-  { label: 'Privacy', href: '#' },
+  { label: 'Privacy', href: '/privacy' },
   { label: 'Terms', href: '/terms' },
   { label: 'Cookies', href: '#' },
 ] as const

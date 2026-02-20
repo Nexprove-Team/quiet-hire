@@ -48,7 +48,7 @@ export default function TermsPage() {
 
       const observer = new IntersectionObserver(
         ([entry]) => {
-          if (entry.isIntersecting) {
+          if (entry?.isIntersecting) {
             setActiveSection(id)
           }
         },
