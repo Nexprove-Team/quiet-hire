@@ -13,7 +13,7 @@ const parsers = {
   location: parseAsString.withDefault('any'),
   experience: parseAsString.withDefault(''),
   period: parseAsString.withDefault('monthly'),
-  salary: parseAsArrayOf(parseAsInteger).withDefault([0, 20000]),
+  salary: parseAsArrayOf(parseAsInteger).withDefault([0, 50000]),
   schedule: parseAsArrayOf(parseAsString).withDefault([
     'Full time',
     'Part time',

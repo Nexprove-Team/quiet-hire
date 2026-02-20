@@ -40,8 +40,8 @@ const DEFAULTS = {
 
 export const PERIOD_CONFIG: Record<string, { max: number; step: number }> = {
   hourly: { max: 500, step: 5 },
-  monthly: { max: 20000, step: 100 },
-  yearly: { max: 300000, step: 5000 },
+  monthly: { max: 50000, step: 100 },
+  yearly: { max: 500000, step: 5000 },
 }
 
 function arraysEqual(a: string[], b: string[]) {
@@ -209,8 +209,6 @@ function SalaryFilter({
   )
 }
 
-/* ── Main component ────────────────────────────────────────── */
-
 const SearchFilter = () => {
   const [filters, setFilters] = useJobListingFilter()
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -247,7 +245,7 @@ const SearchFilter = () => {
       location: 'any',
       experience: '',
       period: 'monthly',
-      salary: [0, 20000],
+      salary: [0, 50000],
       schedule: ['Full time', 'Part time'],
       employment: ['Full day', 'Flexible schedule', 'Distant work'],
       recruiter: '',
