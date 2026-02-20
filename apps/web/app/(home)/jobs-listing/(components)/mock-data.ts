@@ -1,7 +1,5 @@
 import type { PublicJobListItem, TopCompany } from '@/actions/jobs'
 
-// ── Types ──────────────────────────────────────────────────────────────
-
 export interface PublicJob {
   id: string
   date: string
@@ -30,8 +28,6 @@ export interface Recruiter {
   jobCount: number
 }
 
-// ── Card color palette (cycles) ────────────────────────────────────────
-
 const CARD_STYLES = [
   {
     cardColor: 'bg-orange-50/70',
@@ -59,8 +55,6 @@ const CARD_STYLES = [
   },
 ]
 
-// ── Logo color palette (deterministic from name) ──────────────────────
-
 const LOGO_COLORS = [
   'bg-blue-500',
   'bg-rose-500',
@@ -85,8 +79,6 @@ function hashString(str: string): number {
   return Math.abs(hash)
 }
 
-// ── Filter Options ─────────────────────────────────────────────────────
-
 export const WORKING_SCHEDULE_OPTIONS = [
   { label: 'Full time', defaultChecked: true },
   { label: 'Part time', defaultChecked: true },
@@ -103,7 +95,6 @@ export const EMPLOYMENT_TYPE_OPTIONS = [
   { label: 'Shift method', defaultChecked: false },
 ]
 
-// ── Experience label mapping ───────────────────────────────────────────
 
 export const EXPERIENCE_MAP: Record<string, string[]> = {
   entry: ['Junior level', 'Entry level'],
@@ -111,8 +102,6 @@ export const EXPERIENCE_MAP: Record<string, string[]> = {
   senior: ['Senior level'],
   lead: ['Lead level'],
 }
-
-// ── Employment type display mapping ────────────────────────────────────
 
 const EMPLOYMENT_TYPE_LABELS: Record<string, { schedule: string; type: string[] }> = {
   full_time: { schedule: 'Full time', type: ['Full day'] },
@@ -128,8 +117,6 @@ const EXPERIENCE_LABELS: Record<string, string> = {
   lead: 'Lead level',
   executive: 'Executive level',
 }
-
-// ── Mappers ────────────────────────────────────────────────────────────
 
 function formatDate(date: Date): string {
   const d = new Date(date)
