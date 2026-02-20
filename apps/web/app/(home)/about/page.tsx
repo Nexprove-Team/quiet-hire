@@ -443,24 +443,28 @@ function Stats() {
 
 const VALUES = [
   {
+    num: '01',
     title: 'Transparency',
     description:
       'No hidden algorithms. You always know why a match was made and how compatibility is scored.',
     icon: Eye,
   },
   {
+    num: '02',
     title: 'Fairness',
     description:
       'Our AI is built to eliminate bias, evaluating candidates purely on merit and potential.',
     icon: ShieldTick,
   },
   {
+    num: '03',
     title: 'Innovation',
     description:
       '50+ matching dimensions and counting. We continuously push the boundaries of what AI can understand about fit.',
     icon: MagicStar,
   },
   {
+    num: '04',
     title: 'Trust',
     description:
       'Verified listings, honest scoring, and privacy by default. Your data works for you, not against you.',
@@ -470,8 +474,10 @@ const VALUES = [
 
 function Values() {
   return (
-    <section className="py-20 lg:py-28">
-      <div className="mx-auto max-w-375 px-4 sm:px-6 lg:px-8">
+    <section className="bg-brand-navy relative overflow-hidden py-20 lg:py-28">
+      <DarkBackground />
+
+      <div className="relative mx-auto max-w-375 px-4 sm:px-6 lg:px-8">
         <motion.div
           initial="hidden"
           whileInView="visible"
@@ -480,13 +486,13 @@ function Values() {
           transition={{ duration: 0.5 }}
           className="mb-14 text-center"
         >
-          <p className="text-primary mb-2 text-xs font-semibold tracking-widest uppercase">
+          <p className="mb-2 text-xs font-semibold tracking-widest text-[oklch(0.82_0.22_155)] uppercase">
             What We Stand For
           </p>
-          <h2 className="font-mono text-3xl font-bold tracking-tight sm:text-5xl">
+          <h2 className="font-mono text-3xl font-bold tracking-tight text-white sm:text-5xl">
             Our core values
           </h2>
-          <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-xl">
+          <p className="mx-auto mt-4 max-w-xl text-xl text-neutral-400">
             The principles that guide every decision we make and every feature we
             build.
           </p>
@@ -497,29 +503,41 @@ function Values() {
           whileInView="visible"
           viewport={{ once: true, margin: '-80px' }}
           variants={staggerFast}
-          className="mx-auto grid max-w-3xl gap-5 sm:grid-cols-2"
+          className="mx-auto max-w-3xl space-y-4"
         >
           {VALUES.map((value) => (
             <motion.div
               key={value.title}
               variants={fadeUp}
               transition={{ duration: 0.4 }}
-              className="bg-card group relative overflow-hidden rounded-2xl border p-6 transition-all hover:shadow-md"
+              className="group relative flex items-start gap-5 rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 transition-all duration-300 hover:translate-x-1 hover:border-[oklch(0.82_0.22_155)]/40 hover:bg-neutral-900/80 sm:gap-6 sm:p-8"
             >
-              <div className="bg-primary absolute top-0 right-6 left-6 h-0.5 rounded-full opacity-0 transition-opacity group-hover:opacity-100" />
-              <div className="bg-primary/10 mb-4 flex h-10 w-10 items-center justify-center rounded-xl transition-transform group-hover:scale-110">
+              {/* Green left accent */}
+              <div className="absolute top-4 bottom-4 left-0 w-[3px] origin-top scale-y-0 rounded-full bg-[oklch(0.82_0.22_155)] transition-transform duration-300 group-hover:scale-y-100" />
+
+              {/* Number watermark */}
+              <span className="absolute top-4 right-6 font-mono text-6xl font-bold text-white/[0.03] transition-colors duration-300 select-none group-hover:text-[oklch(0.82_0.22_155)]/[0.08] sm:text-7xl">
+                {value.num}
+              </span>
+
+              {/* Icon */}
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[oklch(0.82_0.22_155)]/10 transition-transform duration-300 group-hover:scale-110">
                 <value.icon
-                  size={20}
+                  size={22}
                   variant="Bold"
-                  className="text-primary"
+                  className="text-[oklch(0.82_0.22_155)]"
                 />
               </div>
-              <h3 className="font-mono text-xl font-semibold tracking-tight">
-                {value.title}
-              </h3>
-              <p className="text-muted-foreground mt-1.5 text-sm leading-relaxed">
-                {value.description}
-              </p>
+
+              {/* Content */}
+              <div className="relative min-w-0">
+                <h3 className="font-mono text-lg font-semibold tracking-tight text-white sm:text-xl">
+                  {value.title}
+                </h3>
+                <p className="mt-1 text-sm leading-relaxed text-neutral-400 sm:text-base">
+                  {value.description}
+                </p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
