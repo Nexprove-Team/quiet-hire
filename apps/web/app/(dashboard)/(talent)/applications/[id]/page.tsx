@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useMemo } from 'react'
+import { use, useMemo, useEffect, useRef } from 'react'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
 import { motion } from 'motion/react'
@@ -32,8 +32,9 @@ import {
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
 import { APPLICATION_STATUS_CONFIG } from '@/lib/constants'
-import { useApplication } from '@/hooks/use-applications'
+import { useApplication, useGenerateMatchAnalysis } from '@/hooks/use-applications'
 import type { Icon } from '@hackhyre/ui/icons'
+import { Streamdown } from 'streamdown'
 
 function formatSalary(
   min: number | null,
@@ -67,7 +68,6 @@ function formatEmploymentType(type: string) {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ')
 }
-
 
 function InfoRow({
   icon: Icon,
@@ -239,6 +239,18 @@ export default function ApplicationDetailPage({
 }: PageProps<'/applications/[id]'>) {
   const { id } = use(params)
   const { data: app, isLoading, error } = useApplication(id)
+  const generateAnalysis = useGenerateMatchAnalysis()
+  const didTrigger = useRef(false)
+
+  useEffect(() => {
+    if (app && !app.matchAnalysis && !didTrigger.current) {
+      didTrigger.current = true
+      generateAnalysis.mutate(app.id)
+    }
+  }, [app?.id, app?.matchAnalysis])
+
+  const isGeneratingAnalysis =
+    generateAnalysis.isPending || (!!app && !app.matchAnalysis)
 
   const timeline = useMemo(() => {
     if (!app) return []
@@ -392,6 +404,14 @@ export default function ApplicationDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {isGeneratingAnalysis ? (
+                  <div className="flex flex-col items-center gap-3 py-4">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-current/20 border-t-current" />
+                    <p className="text-muted-foreground text-[13px]">
+                      Generating match analysis...
+                    </p>
+                  </div>
+                ) : (
                 <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
                   <ScoreRing score={score} />
                   <div className="min-w-0 flex-1">
@@ -464,6 +484,7 @@ export default function ApplicationDetailPage({
                     )}
                   </div>
                 </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
@@ -481,9 +502,12 @@ export default function ApplicationDetailPage({
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground text-[13px] leading-relaxed">
+                <Streamdown
+                  mode="static"
+                  className="text-muted-foreground text-[13px] leading-relaxed"
+                >
                   {app.job.description}
-                </p>
+                </Streamdown>
               </CardContent>
             </Card>
           </motion.div>
@@ -751,7 +775,9 @@ export default function ApplicationDetailPage({
                           {event.description}
                         </p>
                         <p className="text-muted-foreground/60 mt-1 text-[11px]">
-                          {formatDistanceToNow(new Date(event.timestamp), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(event.timestamp), {
+                            addSuffix: true,
+                          })}
                         </p>
                       </div>
                     </div>

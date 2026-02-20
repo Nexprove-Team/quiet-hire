@@ -1,9 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@hackhyre/ui/components/button'
-import { Input } from '@hackhyre/ui/components/input'
 import {
   Popover,
   PopoverContent,
@@ -33,6 +33,7 @@ import {
 import { cn } from '@hackhyre/ui/lib/utils'
 import { useCandidateSidebar } from '@/hooks/use-candidate-sidebar'
 import { CANDIDATE_BREADCRUMB_MAP } from '@/lib/candidate-constants'
+import { CommandMenu } from './command-menu'
 import { authClient, useSession } from '@/lib/auth-client'
 import { MOCK_CANDIDATE_NOTIFICATIONS } from '@/lib/candidate-mock-data'
 
@@ -238,6 +239,7 @@ function CandidateUserNav() {
 
 export function CandidateHeader() {
   const openMobile = useCandidateSidebar((s) => s.openMobile)
+  const [commandOpen, setCommandOpen] = useState(false)
 
   return (
     <header className="bg-card/80 flex h-14 shrink-0 items-center gap-3 border-b px-4 backdrop-blur-sm">
@@ -254,18 +256,19 @@ export function CandidateHeader() {
       {/* Breadcrumbs */}
       <CandidateBreadcrumbs />
 
-      {/* Search */}
-      <div className="relative ml-auto max-w-xs flex-1 md:max-w-sm">
-        <SearchNormal
-          size={15}
-          variant="Linear"
-          className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2"
-        />
-        <Input
-          placeholder="Search jobs..."
-          className="bg-muted/50 focus-visible:bg-background h-9 rounded-xl border-0 pl-9 text-[13px]"
-        />
-      </div>
+      {/* Search trigger */}
+      <button
+        onClick={() => setCommandOpen(true)}
+        className="bg-muted/50 text-muted-foreground hover:bg-muted ml-auto flex h-9 max-w-xs flex-1 items-center gap-2 rounded-xl px-3 text-[13px] transition-colors md:max-w-sm"
+      >
+        <SearchNormal size={15} variant="Linear" />
+        <span className="flex-1 text-left">Search...</span>
+        <kbd className="bg-background text-muted-foreground/70 pointer-events-none hidden rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium md:inline-block">
+          ⌘K
+        </kbd>
+      </button>
+
+      <CommandMenu open={commandOpen} onOpenChange={setCommandOpen} />
 
       <Separator orientation="vertical" className="mx-1 hidden h-6 md:block" />
 

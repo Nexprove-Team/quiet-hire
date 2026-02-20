@@ -52,6 +52,7 @@ import { useUpdateJob } from '@/hooks/use-jobs'
 import type { RecruiterJobListItem } from '@/actions/recruiter-jobs'
 import { JOB_STATUS_CONFIG } from '@/lib/constants'
 import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
+import { shrinkString } from '@/lib/shrink-string'
 
 type JobStatus = 'draft' | 'open' | 'paused' | 'filled'
 
@@ -126,7 +127,13 @@ function JobRow({
       <TableCell className="py-4">
         <Link href={`/recuriter/jobs/${job.id}`} className="block">
           <p className="group-hover:text-primary text-[13px] font-semibold transition-colors">
-            {job.title}
+            {shrinkString({
+              text: job.title,
+              prefixLength: 18,
+              afterLength: 8,
+              useDot: true,
+              shrinkHolderNo: 3,
+            })}
           </p>
           <div className="text-muted-foreground mt-1 flex items-center gap-3 text-[11px]">
             <span className="flex items-center gap-1">
@@ -204,7 +211,9 @@ function JobRow({
             {(job.status === 'open' || job.status === 'paused') && (
               <DropdownMenuItem
                 className="gap-2 text-[13px]"
-                onClick={() => onTogglePause({ id: job.id, status: job.status })}
+                onClick={() =>
+                  onTogglePause({ id: job.id, status: job.status })
+                }
               >
                 {job.status === 'open' ? (
                   <>

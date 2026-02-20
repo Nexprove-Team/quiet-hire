@@ -14,15 +14,8 @@ const parsers = {
   experience: parseAsString.withDefault(''),
   period: parseAsString.withDefault('monthly'),
   salary: parseAsArrayOf(parseAsInteger).withDefault([0, 50000]),
-  schedule: parseAsArrayOf(parseAsString).withDefault([
-    'Full time',
-    'Part time',
-  ]),
-  employment: parseAsArrayOf(parseAsString).withDefault([
-    'Full day',
-    'Flexible schedule',
-    'Distant work',
-  ]),
+  schedule: parseAsArrayOf(parseAsString).withDefault([]),
+  employment: parseAsArrayOf(parseAsString).withDefault([]),
   recruiter: parseAsString.withDefault(''),
 }
 

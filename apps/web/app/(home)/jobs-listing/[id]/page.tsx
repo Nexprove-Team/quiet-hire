@@ -28,12 +28,16 @@ import {
   Global,
   Building,
   People,
+  LinkIcon,
 } from '@hackhyre/ui/icons'
 import { cn } from '@hackhyre/ui/lib/utils'
+import { toast } from 'sonner'
+import { env } from '@/env/client'
 import { toDisplayJob } from '../(components)/mock-data'
 import type { PublicJob } from '../(components)/mock-data'
 import { useJobById, usePublicJobs } from '@/hooks/use-jobs'
 import { useIsSaved, useToggleSaveJob } from '@/hooks/use-saved-jobs'
+import { useHasApplied } from '@/hooks/use-applications'
 import {
   RelevanceSummaryCard,
   type JobDataForRelevance,
@@ -327,6 +331,7 @@ export default function JobDetailPage({
   const { mutate: toggleSave } = useToggleSaveJob()
   const openCompanySheet = useCompanySheet((s) => s.open)
   const openApplySheet = useApplySheet((s) => s.open)
+  const { data: hasApplied } = useHasApplied(id)
 
   const job = rawJob ? toDisplayJob(rawJob, 0) : null
 
@@ -407,6 +412,20 @@ export default function JobDetailPage({
               <Button
                 variant="outline"
                 size="sm"
+                className="gap-2 rounded-lg border-neutral-200 bg-white text-[13px] text-neutral-700 hover:bg-neutral-50 hover:text-neutral-900"
+                onClick={() => {
+                  navigator.clipboard.writeText(
+                    `${env.NEXT_PUBLIC_BETTER_AUTH_URL}/jobs-listing/${job.id}`
+                  )
+                  toast.success('Link copied to clipboard')
+                }}
+              >
+                <LinkIcon size={14} variant="Linear" />
+                Share
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 className={cn(
                   'gap-2 rounded-lg text-[13px]',
                   isSaved
@@ -420,11 +439,12 @@ export default function JobDetailPage({
               </Button>
               <Button
                 size="sm"
-                className="bg-primary hover:bg-primary/90 gap-2 rounded-lg text-[13px] font-semibold text-neutral-900"
+                className="bg-primary hover:bg-primary/90 gap-2 rounded-lg text-[13px] font-semibold text-neutral-900 disabled:opacity-50"
+                disabled={hasApplied}
                 onClick={() => openApplySheet(job.id, job.title, job.company)}
               >
                 <Send size={14} variant="Linear" />
-                Apply Now
+                {hasApplied ? 'Applied' : 'Apply Now'}
               </Button>
             </div>
           </div>
@@ -729,13 +749,14 @@ export default function JobDetailPage({
                       We&apos;ll review your application and get back to you.
                     </p>
                     <Button
-                      className="bg-primary hover:bg-primary/90 w-full gap-2 rounded-lg font-semibold text-neutral-900"
+                      className="bg-primary hover:bg-primary/90 w-full gap-2 rounded-lg font-semibold text-neutral-900 disabled:opacity-50"
+                      disabled={hasApplied}
                       onClick={() =>
                         openApplySheet(job.id, job.title, job.company)
                       }
                     >
                       <Send size={16} variant="Linear" />
-                      Apply Now
+                      {hasApplied ? 'Applied' : 'Apply Now'}
                     </Button>
                   </CardContent>
                 </Card>

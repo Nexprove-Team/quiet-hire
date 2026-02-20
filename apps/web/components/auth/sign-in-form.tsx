@@ -57,7 +57,7 @@ export function SignInForm() {
       toast.success('Welcome back!')
       router.push(
         // @ts-expect-error next line to be updated to handle multiple roles
-        data.role === 'recruiter' ? '/recuriter/dashboard' : '/dashboard'
+        data.role === 'recruiter' ? '/recuriter/dashboard' : '/jobs-listing'
       )
     })
   }

@@ -256,6 +256,65 @@ export async function getCompanyByName(
   return { ...row, jobCount: Number(row.jobCount) }
 }
 
+// ── Command-menu search ──────────────────────────────────────────────────────
+
+export interface CommandSearchResults {
+  jobs: { id: string; title: string; company: string | null; location: string | null }[]
+  companies: { id: string; name: string; logoUrl: string | null }[]
+}
+
+export async function searchCommandMenu(query: string): Promise<CommandSearchResults> {
+  const q = query.trim()
+  if (!q) return { jobs: [], companies: [] }
+
+  const searchVector = sql`(
+    setweight(to_tsvector('english', coalesce(${jobs.title}, '')), 'A') ||
+    setweight(to_tsvector('english', coalesce(${jobs.description}, '')), 'B') ||
+    setweight(to_tsvector('english', coalesce(${jobs.skills}::text, '')), 'C') ||
+    setweight(to_tsvector('english', coalesce(${jobs.requirements}::text, '')), 'C')
+  )`
+  const tsquery = sql`websearch_to_tsquery('english', ${q})`
+
+  const [jobRows, companyRows] = await Promise.all([
+    db
+      .select({
+        id: jobs.id,
+        title: jobs.title,
+        location: jobs.location,
+        companyName: companies.name,
+      })
+      .from(jobs)
+      .leftJoin(companies, eq(jobs.companyId, companies.id))
+      .where(
+        and(
+          eq(jobs.status, 'open'),
+          or(
+            sql`${searchVector} @@ ${tsquery}`,
+            ilike(companies.name, `%${q}%`)
+          )
+        )
+      )
+      .orderBy(sql`ts_rank(${searchVector}, ${tsquery}) DESC`)
+      .limit(5),
+
+    db
+      .select({ id: companies.id, name: companies.name, logoUrl: companies.logoUrl })
+      .from(companies)
+      .where(ilike(companies.name, `%${q}%`))
+      .limit(3),
+  ])
+
+  return {
+    jobs: jobRows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      company: r.companyName,
+      location: r.location,
+    })),
+    companies: companyRows,
+  }
+}
+
 export async function getTopCompanies(): Promise<TopCompany[]> {
   const rows = await db
     .select({

@@ -1,8 +1,11 @@
 'use server'
 
 import { eq, desc, and } from 'drizzle-orm'
-import { db, applications, jobs, companies } from '@hackhyre/db'
+import { db, applications, jobs, companies, candidateProfiles } from '@hackhyre/db'
 import { getSession } from '@/lib/auth-session'
+import { generateText, Output } from 'ai'
+import { google } from '@ai-sdk/google'
+import { z } from 'zod'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -241,7 +244,165 @@ export async function submitApplication(
     })
     .returning({ id: applications.id })
 
+  // Fire-and-forget match analysis generation
+  generateMatchAnalysis(inserted!.id).catch(console.error)
+
   return { success: true, applicationId: inserted!.id }
+}
+
+// ── Match Analysis Generation ────────────────────────────────────────────────
+
+const matchAnalysisSchema = z.object({
+  matchPercentage: z
+    .number()
+    .int()
+    .min(0)
+    .max(100)
+    .describe('Overall match percentage between candidate and job (0-100)'),
+  strengths: z
+    .array(z.string())
+    .describe(
+      'List of 2-4 key strengths where the candidate matches the job requirements'
+    ),
+  gaps: z
+    .array(z.string())
+    .describe(
+      'List of 1-3 gaps or areas where the candidate may fall short'
+    ),
+  recommendation: z
+    .string()
+    .describe(
+      'A concise 1-2 sentence recommendation for the candidate about this role'
+    ),
+})
+
+export async function generateMatchAnalysis(applicationId: string) {
+  // Fetch application + job + company
+  const rows = await db
+    .select({
+      application: applications,
+      job: jobs,
+      company: companies,
+    })
+    .from(applications)
+    .innerJoin(jobs, eq(applications.jobId, jobs.id))
+    .leftJoin(companies, eq(jobs.companyId, companies.id))
+    .where(eq(applications.id, applicationId))
+    .limit(1)
+
+  const row = rows[0]
+  if (!row) return null
+
+  // Skip if already generated
+  if (row.application.matchAnalysis) return row.application.matchAnalysis
+
+  // Fetch candidate profile if logged-in user
+  let candidateData: {
+    headline: string | null
+    bio: string | null
+    skills: string[]
+    experienceYears: number | null
+    location: string | null
+  } = {
+    headline: null,
+    bio: null,
+    skills: [],
+    experienceYears: null,
+    location: null,
+  }
+
+  if (row.application.candidateId) {
+    const [profile] = await db
+      .select()
+      .from(candidateProfiles)
+      .where(eq(candidateProfiles.userId, row.application.candidateId))
+      .limit(1)
+
+    if (profile) {
+      candidateData = {
+        headline: profile.headline,
+        bio: profile.bio,
+        skills: profile.skills ?? [],
+        experienceYears: profile.experienceYears,
+        location: profile.location,
+      }
+    }
+  }
+
+  // Build candidate context — fall back to application fields for guests
+  const candidateHeadline = candidateData.headline ?? row.application.candidateName
+  const candidateBio = candidateData.bio ?? row.application.coverLetter ?? 'Not specified'
+  const candidateSkills =
+    candidateData.skills.length > 0
+      ? candidateData.skills.join(', ')
+      : 'None listed'
+
+  const prompt = `You are an expert career advisor. Compare the candidate's profile against the job listing and provide a relevance assessment.
+
+## Candidate Profile
+- Headline: ${candidateHeadline}
+- Summary: ${candidateBio}
+- Skills: ${candidateSkills}
+- Years of Experience: ${candidateData.experienceYears ?? 'Unknown'}
+- Location: ${candidateData.location ?? 'Not specified'}
+
+## Job Listing
+- Title: ${row.job.title}
+- Company: ${row.company?.name ?? 'Unknown'}
+- Description: ${row.job.description}
+- Required Skills: ${(row.job.skills ?? []).length > 0 ? (row.job.skills ?? []).join(', ') : 'None listed'}
+- Requirements: ${(row.job.requirements ?? []).length > 0 ? (row.job.requirements ?? []).join('; ') : 'None listed'}
+- Experience Level: ${row.job.experienceLevel}
+- Location: ${row.job.location ?? 'Not specified'}${row.job.isRemote ? ' (Remote)' : ''}
+- Employment Type: ${row.job.employmentType}
+
+Provide an honest and helpful assessment. Be specific about which skills and qualifications match or are missing. The match percentage should reflect the actual alignment — don't inflate it. Keep strengths and gaps concise (one short sentence each).`
+
+  const { output } = await generateText({
+    model: google('gemini-2.5-flash'),
+    output: Output.object({ schema: matchAnalysisSchema }),
+    messages: [{ role: 'user', content: prompt }],
+  })
+
+  if (!output) return null
+
+  const analysisData = {
+    feedback: output.recommendation,
+    strengths: output.strengths,
+    gaps: output.gaps,
+  }
+
+  // Persist to DB
+  await db
+    .update(applications)
+    .set({
+      matchAnalysis: analysisData,
+      relevanceScore: output.matchPercentage,
+      relevanceFeedback: output.recommendation,
+    })
+    .where(eq(applications.id, applicationId))
+
+  return analysisData
+}
+
+// ── Has Applied Check ────────────────────────────────────────────────────────
+
+export async function hasAppliedToJob(jobId: string): Promise<boolean> {
+  const session = await getSession()
+  if (!session) return false
+
+  const [row] = await db
+    .select({ id: applications.id })
+    .from(applications)
+    .where(
+      and(
+        eq(applications.jobId, jobId),
+        eq(applications.candidateId, session.user.id)
+      )
+    )
+    .limit(1)
+
+  return !!row
 }
 
 // ── Sidebar Badges ───────────────────────────────────────────────────────────

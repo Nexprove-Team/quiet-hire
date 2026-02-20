@@ -33,6 +33,7 @@ import {
   TaskSquare,
   Code,
   Play,
+  LinkIcon,
 } from '@hackhyre/ui/icons'
 import { Skeleton } from '@hackhyre/ui/components/skeleton'
 import { cn } from '@hackhyre/ui/lib/utils'
@@ -44,6 +45,7 @@ import { DeleteJobDialog } from '@/components/jobs/delete-job-dialog'
 import { ApplicationStatusSelect } from '@/components/applications/status-select'
 import { Streamdown } from 'streamdown'
 import { toast } from 'sonner'
+import { env } from '@/env/client'
 
 const STATUS_ICON: Record<string, typeof TickCircle> = {
   open: TickCircle,
@@ -194,6 +196,20 @@ export default function JobDetailPage(
           </Link>
         </Button>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 rounded-lg text-[13px]"
+            onClick={() => {
+              navigator.clipboard.writeText(
+                `${env.NEXT_PUBLIC_BETTER_AUTH_URL}/jobs-listing/${id}`
+              )
+              toast.success('Link copied to clipboard')
+            }}
+          >
+            <LinkIcon size={14} variant="Linear" />
+            Share
+          </Button>
           <Button
             variant="outline"
             size="sm"
