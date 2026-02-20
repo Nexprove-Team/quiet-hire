@@ -8,8 +8,15 @@ import { Testimonials } from '@/components/home/landing/testimonials'
 import { FAQ } from '@/components/home/landing/faq'
 import { CTA } from '@/components/home/landing/cta'
 import { NewForRecruiters } from '@/components/home/landing/new-for-recuriters'
+import { getSession } from '@/lib/auth-session'
+import { redirect } from 'next/navigation'
 
 export default async function HomePage() {
+  const session = await getSession()
+  if (session && session.user.role === 'candidate') {
+    redirect('/jobs-listing')
+  }
+
   return (
     <>
       <Hero />
