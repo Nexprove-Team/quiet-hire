@@ -34,6 +34,10 @@ import { toDisplayJob } from '../(components)/mock-data'
 import type { PublicJob } from '../(components)/mock-data'
 import { useJobById, usePublicJobs } from '@/hooks/use-jobs'
 import { useIsSaved, useToggleSaveJob } from '@/hooks/use-saved-jobs'
+import {
+  RelevanceSummaryCard,
+  type JobDataForRelevance,
+} from '../(components)/relevance-summary'
 import { useCompanySheet } from '../(components)/use-company-sheet'
 import { CompanySheet } from '../(components)/company-sheet'
 import { useApplySheet } from '../(components)/use-apply-sheet'
@@ -362,6 +366,19 @@ export default function JobDetailPage({
     )
     .slice(0, 4)
 
+  const jobDataForRelevance: JobDataForRelevance = {
+    id: job.id,
+    title: job.title,
+    description: details.description,
+    skills: details.skills,
+    requirements: details.requirements,
+    experienceLevel: job.experienceLevel,
+    location: rawJob?.location ?? null,
+    isRemote: rawJob?.isRemote ?? job.locationType === 'remote',
+    employmentType: rawJob?.employmentType ?? 'full_time',
+    company: rawJob?.company?.name ?? job.company,
+  }
+
   const locationLabel =
     job.locationType === 'remote'
       ? 'Remote'
@@ -603,8 +620,11 @@ export default function JobDetailPage({
               </motion.div>
             </div>
 
-            {/* Right Column — Company Info + Similar Jobs */}
+            {/* Right Column — Relevance + Company Info + Similar Jobs */}
             <div className="space-y-6">
+              {/* Relevance Summary */}
+              <RelevanceSummaryCard jobData={jobDataForRelevance} />
+
               {/* Company Overview */}
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
